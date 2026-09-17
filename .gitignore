@@ -1,0 +1,4 @@
+# 无需忽略任何站点文件；仅排除本机临时产物
+Thumbs.db
+desktop.ini
+*.tmp
