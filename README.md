@@ -29,9 +29,15 @@ demo-site/                    ← git 仓库根目录
 ├─ setup.ps1                  ← 上者调用的脚本（ASCII 名，勿改中文名）
 ├─ 发布更新.bat                ← 日常发布（双击运行）
 ├─ publish.ps1                ← 上者调用的脚本（ASCII 名，勿改中文名）
+├─ 修复登录.bat                ← 推送报 Authentication failed 时双击这个
+├─ fix-auth.ps1               ← 上者调用的脚本
 ├─ 操作步骤.md                 ← 首次发布的完整操作指引
 └─ .nojekyll                  ← 让 GitHub Pages 原样输出，不做 Jekyll 处理
 ```
+
+> ⚠️ **`.bat` 内容必须保持纯 ASCII**：cmd.exe 用系统 OEM 代码页(936)解析批处理文件，
+> 里面若出现 UTF-8 中文会被拆成乱码路径（曾因此报"不是内部或外部命令"）。
+> 所有中文提示都放在 `.ps1` 里，`.ps1` 必须保存为 **UTF-8 with BOM**。
 
 ## 三、日常更新（配置完成后）
 
