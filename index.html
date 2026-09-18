@@ -25,9 +25,12 @@ th,td{padding:11px 12px;border-bottom:1px solid #eef2f8;text-align:left;font-siz
 th{background:#eef3fa;color:#263e61;font-weight:600;white-space:nowrap}
 tr:last-child td{border-bottom:0}
 td.ver{font-weight:600;color:#175bdd;white-space:nowrap}
+td.nowrap{white-space:nowrap}
+span.sep{display:inline-block;width:1px;height:12px;margin:0 8px;background:#dbe3ee;vertical-align:-1px}
 a.open{color:#175bdd;text-decoration:none;white-space:nowrap}
 a.open:hover{text-decoration:underline}
 a.dl{color:#1677a8;text-decoration:none;white-space:nowrap}
+a.dl:hover{text-decoration:underline}
 .muted{color:#9aa6b6}
 .tips{margin-top:26px;padding:16px 18px;background:#fff;border:1px solid #e2e9f3;border-radius:6px;color:#4e5969;font-size:13px}
 .tips b{color:#175bdd}
@@ -42,12 +45,13 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
 
   <div class="card">
     <h2>最新版本 V1.6</h2>
-    <div class="meta">发布日期：2026-09-17 ｜ 站点更新时间：2026-09-17 18:55</div>
-    <p class="note">暂无更新说明</p>
+    <div class="meta">发布日期：2026-09-18 ｜ 站点更新时间：2026-09-18 09:31</div>
+    <p class="note">首页增加演示文件HTML下载；补充版本号与覆盖快照提示</p>
     <div class="actions">
       <a class="btn" href="latest.html">打开演示</a>
-      <a class="btn ghost" href="versions/2026-09-17-v1.6/index.html">固定版本快照</a>
-      <a class="btn ghost" href="versions/2026-09-17-v1.6/需求说明书-V1.6.docx">下载需求说明书 V1.6</a>
+      <a class="btn ghost" href="versions/2026-09-18-v1.6/安全质量演示-V1.6.html" download>下载演示文件（HTML）</a>
+      <a class="btn ghost" href="versions/2026-09-18-v1.6/index.html">固定版本快照</a>
+      <a class="btn ghost" href="versions/2026-09-18-v1.6/需求说明书-V1.6.docx">下载需求说明书 V1.6</a>
     </div>
   </div>
 
@@ -55,12 +59,14 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
   <table>
     <thead><tr><th>版本</th><th>日期</th><th>更新说明</th><th>演示</th><th>需求文档</th></tr></thead>
     <tbody>
-<tr><td class="ver">V1.6</td><td>2026-09-17</td><td><span class="muted">—</span></td><td><a class="open" href="versions/2026-09-17-v1.6/index.html">打开演示</a></td><td><a class="dl" href="versions/2026-09-17-v1.6/需求说明书-V1.6.docx">下载</a></td></tr>
+<tr><td class="ver">V1.6</td><td>2026-09-18</td><td>首页增加演示文件HTML下载；补充版本号与覆盖快照提示</td><td class="nowrap"><a class="open" href="versions/2026-09-18-v1.6/index.html">打开</a><span class="sep"></span><a class="dl" href="versions/2026-09-18-v1.6/安全质量演示-V1.6.html" download>下载HTML</a></td><td><a class="dl" href="versions/2026-09-18-v1.6/需求说明书-V1.6.docx">下载</a></td></tr>
+<tr><td class="ver">V1.6</td><td>2026-09-17</td><td>操作手册补充日常更新指引</td><td class="nowrap"><a class="open" href="versions/2026-09-17-v1.6/index.html">打开</a><span class="sep"></span><a class="dl" href="versions/2026-09-17-v1.6/安全质量演示-V1.6.html" download>下载HTML</a></td><td><a class="dl" href="versions/2026-09-17-v1.6/需求说明书-V1.6.docx">下载</a></td></tr>
     </tbody>
   </table>
 
   <div class="tips">
     <p><b>地址说明</b>：<code>latest.html</code> 始终指向最新版，可长期作为研发的固定入口；<code>versions/</code> 下是按日期归档的历史快照，用于回溯"当时那一版长什么样"。</p>
+    <p><b>下载演示文件</b>：演示是<b>完全自包含的单文件 HTML</b>（无外部 JS/CSS/图片依赖）。点「下载演示文件（HTML）」保存到本地后，双击即可离线打开，也可以直接转发给别人；历史版本里每一版都能单独下载。</p>
     <p><b>需求文档</b>：与演示同版本的 Word 文档随版本一起归档，点右侧"下载"获取。</p>
     <p><b>如何更新</b>：在本地 <code>demo-site</code> 目录双击 <code>发布更新.bat</code>，填写更新说明即可。地址不变，无需再逐个发文件。</p>
   </div>

@@ -75,6 +75,21 @@ if (-not $RenderOnly) {
     $verName = "$today-v$prdVer"
     $verDir = Join-Path $root "versions\$verName"
 
+    # 提示一：同一天同一版本号会覆盖已有快照，历史列表不会新增一行
+    if (Test-Path $verDir) {
+        Write-Host "提示：versions\$verName 已存在，本次将覆盖该日期的快照，历史列表不会新增一行。" -ForegroundColor Yellow
+        Write-Host "      若要把这次更新单独留存，请先把 HTML 里的 data-prd-version 改成新值（例如 1.6 → 1.7）。" -ForegroundColor DarkGray
+    }
+
+    # 提示二：需求文档版本与 HTML 内嵌版本不一致，会导致归档文件名与内容对不上
+    if ($Docx -and (Test-Path $Docx)) {
+        $dv = [regex]::Match((Split-Path $Docx -Leaf), '_V([\d.]+)_').Groups[1].Value
+        if ($dv -and $dv -ne $prdVer) {
+            Write-Host "提示：需求文档是 V$dv，而 HTML 内嵌版本是 V$prdVer，两者不一致。" -ForegroundColor Yellow
+            Write-Host "      文档会按 V$prdVer 命名归档，建议先把两处版本号统一。" -ForegroundColor DarkGray
+        }
+    }
+
     New-Item -ItemType Directory -Force -Path $verDir | Out-Null
     Copy-Item $Source (Join-Path $verDir 'index.html') -Force
     Copy-Item $Source (Join-Path $root 'latest.html') -Force
@@ -85,11 +100,17 @@ if (-not $RenderOnly) {
         Copy-Item $Docx (Join-Path $verDir $docxFile) -Force
     }
 
+    # 另存一份可下载的单文件演示（浏览器打开 index.html 会直接显示，
+    # 想「下载」需要一个带扩展名的独立文件名 + 链接上的 download 属性）
+    $htmlFile = "安全质量演示-V$prdVer.html"
+    Copy-Item $Source (Join-Path $verDir $htmlFile) -Force
+
     $meta = '{' + "`n" +
             '  "version": ' + (ConvertTo-JsonString $prdVer) + ',' + "`n" +
             '  "date": ' + (ConvertTo-JsonString $today) + ',' + "`n" +
             '  "note": ' + (ConvertTo-JsonString $Note) + ',' + "`n" +
             '  "source": ' + (ConvertTo-JsonString (Split-Path $Source -Leaf)) + ',' + "`n" +
+            '  "htmlFile": ' + (ConvertTo-JsonString $htmlFile) + ',' + "`n" +
             '  "docx": ' + (ConvertTo-JsonString $docxFile) + "`n" +
             '}' + "`n"
     Write-Utf8NoBom (Join-Path $verDir 'meta.json') $meta
@@ -102,17 +123,26 @@ $items = @()
 if (Test-Path $versionsRoot) {
     foreach ($dir in (Get-ChildItem $versionsRoot -Directory | Sort-Object Name -Descending)) {
         $metaPath = Join-Path $dir.FullName 'meta.json'
-        $ver = $dir.Name; $date = $dir.Name; $note = ''; $docx = ''
+        # 注意：PowerShell 变量名不区分大小写，这里的局部变量绝不能叫 $note/$docx/$ver/$date，
+        # 否则会覆盖同名参数（$Note/$Docx），导致提交信息用错、参数失效。
+        $mv = $dir.Name; $md = $dir.Name; $mn = ''; $mx = ''; $mh = ''
         if (Test-Path $metaPath) {
             try {
                 $obj = (Read-Utf8 $metaPath) | ConvertFrom-Json
-                if ($obj.version) { $ver = $obj.version }
-                if ($obj.date) { $date = $obj.date }
-                if ($obj.note) { $note = $obj.note }
-                if ($obj.docx) { $docx = $obj.docx }
+                if ($obj.version) { $mv = $obj.version }
+                if ($obj.date) { $md = $obj.date }
+                if ($obj.note) { $mn = $obj.note }
+                if ($obj.docx) { $mx = $obj.docx }
+                if ($obj.htmlFile) { $mh = $obj.htmlFile }
             } catch { Write-Warning "meta.json 解析失败：$metaPath" }
         }
-        $items += [pscustomobject]@{ Dir = $dir.Name; Ver = $ver; Date = $date; Note = $note; Docx = $docx }
+        # 旧版本快照没有 htmlFile 字段，回退到目录里那个可下载的 html
+        if (-not $mh) {
+            $fallback = Get-ChildItem $dir.FullName -Filter '*.html' -ErrorAction SilentlyContinue |
+                        Where-Object { $_.Name -ne 'index.html' } | Select-Object -First 1
+            $mh = if ($fallback) { $fallback.Name } else { 'index.html' }
+        }
+        $items += [pscustomobject]@{ Dir = $dir.Name; Ver = $mv; Date = $md; Note = $mn; Docx = $mx; Html = $mh }
     }
 }
 
@@ -120,16 +150,21 @@ $latest = if ($items.Count -gt 0) { $items[0] } else { $null }
 $rows = ''
 foreach ($it in $items) {
     $link = "versions/$($it.Dir)/index.html"
+    $htmlLink = "versions/$($it.Dir)/$($it.Html)"
     $docxCell = if ($it.Docx) { '<a class="dl" href="versions/' + $it.Dir + '/' + $it.Docx + '">下载</a>' } else { '<span class="muted">—</span>' }
     $noteCell = if ($it.Note) { [System.Net.WebUtility]::HtmlEncode($it.Note) } else { '<span class="muted">—</span>' }
     $rows += '<tr><td class="ver">V' + $it.Ver + '</td><td>' + $it.Date + '</td><td>' + $noteCell + '</td>' +
-             '<td><a class="open" href="' + $link + '">打开演示</a></td><td>' + $docxCell + '</td></tr>' + "`n"
+             '<td class="nowrap"><a class="open" href="' + $link + '">打开</a><span class="sep"></span>' +
+             '<a class="dl" href="' + $htmlLink + '" download>下载HTML</a></td><td>' + $docxCell + '</td></tr>' + "`n"
 }
 if (-not $rows) { $rows = '<tr><td colspan="5" class="muted" style="text-align:center;padding:28px">暂无版本</td></tr>' }
 
 $latestVer = if ($latest) { 'V' + $latest.Ver } else { '—' }
 $latestDate = if ($latest) { $latest.Date } else { '—' }
 $latestNote = if ($latest -and $latest.Note) { [System.Net.WebUtility]::HtmlEncode($latest.Note) } else { '暂无更新说明' }
+$latestHtml = if ($latest) {
+    '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Html + '" download>下载演示文件（HTML）</a>'
+} else { '' }
 $latestDocx = if ($latest -and $latest.Docx) {
     '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Docx + '">下载需求说明书 ' + $latestVer + '</a>'
 } else { '' }
@@ -163,9 +198,12 @@ th,td{padding:11px 12px;border-bottom:1px solid #eef2f8;text-align:left;font-siz
 th{background:#eef3fa;color:#263e61;font-weight:600;white-space:nowrap}
 tr:last-child td{border-bottom:0}
 td.ver{font-weight:600;color:#175bdd;white-space:nowrap}
+td.nowrap{white-space:nowrap}
+span.sep{display:inline-block;width:1px;height:12px;margin:0 8px;background:#dbe3ee;vertical-align:-1px}
 a.open{color:#175bdd;text-decoration:none;white-space:nowrap}
 a.open:hover{text-decoration:underline}
 a.dl{color:#1677a8;text-decoration:none;white-space:nowrap}
+a.dl:hover{text-decoration:underline}
 .muted{color:#9aa6b6}
 .tips{margin-top:26px;padding:16px 18px;background:#fff;border:1px solid #e2e9f3;border-radius:6px;color:#4e5969;font-size:13px}
 .tips b{color:#175bdd}
@@ -184,6 +222,7 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
     <p class="note">{{LATESTNOTE}}</p>
     <div class="actions">
       <a class="btn" href="latest.html">打开演示</a>
+      {{LATESTHTML}}
       <a class="btn ghost" href="versions/{{LATESTDIR}}/index.html">固定版本快照</a>
       {{LATESTDOCX}}
     </div>
@@ -198,6 +237,7 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
 
   <div class="tips">
     <p><b>地址说明</b>：<code>latest.html</code> 始终指向最新版，可长期作为研发的固定入口；<code>versions/</code> 下是按日期归档的历史快照，用于回溯"当时那一版长什么样"。</p>
+    <p><b>下载演示文件</b>：演示是<b>完全自包含的单文件 HTML</b>（无外部 JS/CSS/图片依赖）。点「下载演示文件（HTML）」保存到本地后，双击即可离线打开，也可以直接转发给别人；历史版本里每一版都能单独下载。</p>
     <p><b>需求文档</b>：与演示同版本的 Word 文档随版本一起归档，点右侧"下载"获取。</p>
     <p><b>如何更新</b>：在本地 <code>demo-site</code> 目录双击 <code>发布更新.bat</code>，填写更新说明即可。地址不变，无需再逐个发文件。</p>
   </div>
@@ -214,6 +254,7 @@ $out = $out.Replace('{{LATESTVER}}', $latestVer)
 $out = $out.Replace('{{LATESTDATE}}', $latestDate)
 $out = $out.Replace('{{UPDATED}}', $updatedAt)
 $out = $out.Replace('{{LATESTNOTE}}', $latestNote)
+$out = $out.Replace('{{LATESTHTML}}', $latestHtml)
 $out = $out.Replace('{{LATESTDIR}}', $latestDir)
 $out = $out.Replace('{{LATESTDOCX}}', $latestDocx)
 $out = $out.Replace('{{ROWS}}', $rows)
