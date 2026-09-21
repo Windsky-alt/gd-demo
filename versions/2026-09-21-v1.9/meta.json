@@ -1,7 +1,7 @@
 {
   "version": "1.9",
   "date": "2026-09-21",
-  "note": "数字例会：导出PDF 改为直接下载（页面栅格化组装真实PDF，不再走浏览器打印）；台账新增多选列与批量导出PDF（多份报表合并成一个PDF下载）",
+  "note": "修复数字例会导出PDF点击无效：报表标记含未自闭合的col等空元素导致SVG转XML解析失败，改用XMLSerializer并强制空元素自闭合、CSS转义、blob/dataURI双通道加载+超时、导出按钮改委托绑定、失败提示带原因",
   "source": "0917优化项.html",
   "htmlFile": "安全质量演示-V1.9.html",
   "docx": "需求说明书-V1.9.docx"
