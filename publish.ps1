@@ -19,6 +19,7 @@ param(
     [string]$Source,
     [string]$Docx,
     [string]$Note = '',
+    [string]$Proxy = '',
     [switch]$RenderOnly,
     [switch]$NoPush,
     [switch]$Prompt
@@ -310,20 +311,58 @@ if ($staged.Code -eq 0) {
 }
 if ($NoPush) { Write-Host "已跳过推送（-NoPush）" -ForegroundColor Yellow; return }
 
-$push = Invoke-Git @('-c', 'http.sslBackend=openssl', 'push', '-u', 'origin', 'HEAD')
+# ---- 推送：自动重试 + 可选走代理（网络被重置是最常见的一类失败）----
+# 变量名不要用 $args（PowerShell 自动变量），否则参数会被覆盖
+$proxyUrl = $Proxy
+if (-not $proxyUrl) { $proxyUrl = $env:HTTPS_PROXY }
+if (-not $proxyUrl) { $proxyUrl = $env:HTTP_PROXY }
+
+$attempts = @()
+if ($proxyUrl) {
+    $attempts += @{ Label = "经代理推送（$proxyUrl）"; Args = @('-c', "http.proxy=$proxyUrl", '-c', "https.proxy=$proxyUrl") }
+}
+$attempts += @{ Label = '常规推送'; Args = @() }
+$attempts += @{ Label = '改用 HTTP/1.1 推送'; Args = @('-c', 'http.version=HTTP/1.1') }
+$attempts += @{ Label = '再次重试（HTTP/1.1）'; Args = @('-c', 'http.version=HTTP/1.1') }
+
+$push = $null
+for ($i = 0; $i -lt $attempts.Count; $i++) {
+    $attempt = $attempts[$i]
+    if ($i -gt 0) { Write-Host "等待 6 秒后重试…" -ForegroundColor DarkGray; Start-Sleep -Seconds 6 }
+    Write-Host "推送尝试 $($i + 1)/$($attempts.Count)：$($attempt.Label)" -ForegroundColor DarkGray
+    $pushArgs = @('-c', 'http.sslBackend=openssl') + $attempt.Args + @('push', '-u', 'origin', 'HEAD')
+    $push = Invoke-Git $pushArgs
+    if ($push.Code -eq 0) { break }
+    if ($push.Text -match 'Authentication failed|Repository not found|Permission denied|support for password authentication|could not read Username') { break }
+}
+
 if ($push.Code -ne 0) {
     Write-Host ""
-    Write-Host "推送失败。内容已提交到本地，没有丢，按下面排查后重新双击本脚本即可：" -ForegroundColor Red
-    Write-Host "  1) Authentication failed / Repository not found" -ForegroundColor Yellow
-    Write-Host "     → 令牌过期，或令牌没勾选这个仓库：重新运行一次 首次配置.bat"
-    Write-Host "  2) 弹出 Git Credential Manager 登录窗口" -ForegroundColor Yellow
-    Write-Host "     → 选 Browser / 浏览器，在网页里点 Authorize 授权即可（推荐，不需要令牌）"
-    Write-Host "  2b) 在窗口里被要求输入 Username / Password" -ForegroundColor Yellow
-    Write-Host "     → Username 填 GitHub 账号名；Password 处粘贴令牌（不是账号密码）"
-    Write-Host "  3) Connection was reset / timeout" -ForegroundColor Yellow
-    Write-Host "     → 网络抖动，直接重跑本脚本"
-    Write-Host "  4) schannel: AcquireCredentialsHandle failed" -ForegroundColor Yellow
-    Write-Host "     → 在本目录执行：git config --local http.sslBackend openssl"
+    Write-Host "推送失败（已尝试 $($attempts.Count) 次）。内容已提交到本地，没有丢。按下面顺序排查：" -ForegroundColor Red
+    $originUrl = (Invoke-Git @('remote', 'get-url', 'origin')).Text
+    $slug = ($originUrl -replace '^https://github\.com/', '') -replace '\.git$', ''
+    if ($push.Text -match 'Connection was reset|Recv failure|timed out|Could not connect|Failed to connect|Recv failure|SSL_ERROR|OpenSSL SSL|Connection reset') {
+        Write-Host "  A) 网络被重置 / 连不上 GitHub（当前就是这一类）" -ForegroundColor Yellow
+        Write-Host "     1. 先直接重跑本脚本 2-3 次，网络抖动多半能过；"
+        Write-Host "     2. 若开了 VPN / 代理软件，把它监听的本地端口交给脚本："
+        Write-Host "        .\publish.ps1 -Proxy http://127.0.0.1:7890" -ForegroundColor Cyan
+        Write-Host "        想长期生效：git config --local http.proxy http://127.0.0.1:7890"
+        Write-Host "        取消：git config --local --unset http.proxy"
+        Write-Host "     3. 或改用 SSH 推送（不受 HTTPS 重置影响）："
+        $pubFile = Get-ChildItem "$env:USERPROFILE\.ssh" -Filter '*.pub' -ErrorAction SilentlyContinue | Select-Object -First 1
+        Write-Host "        第一步：把下面这把公钥加到 GitHub → Settings → SSH and GPG keys → New SSH key" -ForegroundColor Yellow
+        if ($pubFile) { Write-Host ("        " + (Get-Content $pubFile.FullName -Raw).Trim()) -ForegroundColor Cyan }
+        else { Write-Host "        （未找到 %USERPROFILE%\.ssh\*.pub，先运行 ssh-keygen -t ed25519）" -ForegroundColor DarkGray }
+        Write-Host "        第二步：在本目录执行" -ForegroundColor Yellow
+        Write-Host "        git remote set-url origin git@github.com:$slug.git" -ForegroundColor Cyan
+        Write-Host "        git push -u origin HEAD" -ForegroundColor Cyan
+        Write-Host "        若 22 端口也被封：在 %USERPROFILE%\.ssh\config 写入" -ForegroundColor DarkGray
+        Write-Host "        Host github.com  /  HostName ssh.github.com  /  Port 443  /  User git  /  IdentityFile ~/.ssh/你的私钥" -ForegroundColor DarkGray
+    } else {
+        Write-Host "  B) 认证 / 仓库权限问题" -ForegroundColor Yellow
+        Write-Host "     → 重新运行一次 首次配置.bat；弹窗选 Browser 浏览器授权；被要求输入时 Password 处粘贴令牌（不是账号密码）"
+    }
+    Write-Host "  C) schannel: AcquireCredentialsHandle failed → git config --local http.sslBackend openssl"
     Write-Host ""
     Write-Host "原始报错：$($push.Text)" -ForegroundColor DarkGray
     throw "推送未完成"
