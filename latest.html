@@ -2923,7 +2923,7 @@
         if (!card.querySelector('.rectify-locked')) {
           const banner = document.createElement('div');
           banner.className = 'rectify-locked';
-          banner.textContent = '该问题已整改并完成复查，整改与复查信息不可编辑；如需更正请走更正流程（作废重建）。';
+          banner.textContent = '该问题已整改并完成复查，整改与复查信息不可编辑；如需更正请从台账「编辑」进入更正模式（检查结论判错需作废重建）。';
           const body = card.querySelector('.detail-problem-body') || card;
           body.insertBefore(banner, body.firstChild);
         }
