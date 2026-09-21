@@ -311,19 +311,69 @@ if ($staged.Code -eq 0) {
 }
 if ($NoPush) { Write-Host "已跳过推送（-NoPush）" -ForegroundColor Yellow; return }
 
-# ---- 推送：自动重试 + 可选走代理（网络被重置是最常见的一类失败）----
-# 变量名不要用 $args（PowerShell 自动变量），否则参数会被覆盖
-$proxyUrl = $Proxy
-if (-not $proxyUrl) { $proxyUrl = $env:HTTPS_PROXY }
-if (-not $proxyUrl) { $proxyUrl = $env:HTTP_PROXY }
-
-$attempts = @()
-if ($proxyUrl) {
-    $attempts += @{ Label = "经代理推送（$proxyUrl）"; Args = @('-c', "http.proxy=$proxyUrl", '-c', "https.proxy=$proxyUrl") }
+# ================= 推送：自动选择可用链路（直连 / 本机代理）+ 自动重试 =================
+function Test-TcpPort {
+    param([string]$TargetHost, [int]$Port, [int]$TimeoutMs = 2000)
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $iar = $client.BeginConnect($TargetHost, $Port, $null, $null)
+        if ($iar.AsyncWaitHandle.WaitOne($TimeoutMs, $false) -and $client.Connected) { return $true }
+        return $false
+    } catch { return $false } finally { $client.Close() }
 }
-$attempts += @{ Label = '常规推送'; Args = @() }
-$attempts += @{ Label = '改用 HTTP/1.1 推送'; Args = @('-c', 'http.version=HTTP/1.1') }
-$attempts += @{ Label = '再次重试（HTTP/1.1）'; Args = @('-c', 'http.version=HTTP/1.1') }
+
+function Add-ProxyCandidate {
+    param($Bag, $Value)
+    if (-not $Value) { return }
+    $u = ([string]$Value).Trim()
+    if (-not $u) { return }
+    if ($u -notmatch '^https?://') { $u = 'http://' + $u }
+    if (-not $Bag.Contains($u)) { [void]$Bag.Add($u) }
+}
+
+# 候选代理：-Proxy 参数 → 环境变量 → 系统代理设置（注册表）→ 常见本地代理端口
+$proxyCandidates = New-Object System.Collections.Generic.List[string]
+Add-ProxyCandidate $proxyCandidates $Proxy
+Add-ProxyCandidate $proxyCandidates $env:HTTPS_PROXY
+Add-ProxyCandidate $proxyCandidates $env:HTTP_PROXY
+$systemProxyHint = ''
+try {
+    $ieProxy = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings' -ErrorAction SilentlyContinue
+    if ($ieProxy -and $ieProxy.ProxyServer) {
+        $systemProxyHint = [string]$ieProxy.ProxyServer
+        Add-ProxyCandidate $proxyCandidates $ieProxy.ProxyServer
+    }
+} catch { }
+foreach ($port in 17890, 7890, 7891, 7897, 10808, 10809, 1080, 1081, 2080, 33210, 4780, 8889, 8118) {
+    Add-ProxyCandidate $proxyCandidates ('http://127.0.0.1:' + $port)
+}
+
+$aliveProxy = ''
+foreach ($candidate in $proxyCandidates) {
+    $hostPart = ($candidate -replace '^https?://', '')
+    $portPart = 8080
+    if ($hostPart -match ':(\d+)$') { $portPart = [int]$Matches[1] }
+    $hostOnly = ($hostPart -replace ':\d+$', '')
+    if (Test-TcpPort $hostOnly $portPart 400) { $aliveProxy = $candidate; break }
+}
+
+$directOk = Test-TcpPort 'github.com' 443 3000
+if ($aliveProxy) { Write-Host "检测到本机代理：$aliveProxy" -ForegroundColor DarkGray }
+Write-Host ("直连 github.com:443 " + $(if ($directOk) { '可用' } else { '不通' })) -ForegroundColor DarkGray
+
+$proxyAttempt = @{ Label = "经代理推送（$aliveProxy）"; Args = @('-c', "http.proxy=$aliveProxy", '-c', "https.proxy=$aliveProxy") }
+$directAttempt = @{ Label = '直连推送'; Args = @() }
+$directHttp1 = @{ Label = '直连推送（HTTP/1.1）'; Args = @('-c', 'http.version=HTTP/1.1') }
+# 有代理就优先走代理：TCP 探测通过不代表 TLS/SNI 层不被拦，实测直连常在第 21 秒才失败，太慢
+$preferProxy = [bool]($aliveProxy -and ((-not $directOk) -or $systemProxyHint))
+if ($preferProxy) {
+    Write-Host "本次优先走代理推送（系统里配置过代理，直连不稳定）" -ForegroundColor Yellow
+    $attempts = @($proxyAttempt, $proxyAttempt, $directHttp1)
+} elseif ($aliveProxy) {
+    $attempts = @($directAttempt, $proxyAttempt, $directHttp1)
+} else {
+    $attempts = @($directAttempt, $directHttp1, $directHttp1)
+}
 
 $push = $null
 for ($i = 0; $i -lt $attempts.Count; $i++) {
@@ -340,24 +390,28 @@ if ($push.Code -ne 0) {
     Write-Host ""
     Write-Host "推送失败（已尝试 $($attempts.Count) 次）。内容已提交到本地，没有丢。按下面顺序排查：" -ForegroundColor Red
     $originUrl = (Invoke-Git @('remote', 'get-url', 'origin')).Text
-    $slug = ($originUrl -replace '^https://github\.com/', '') -replace '\.git$', ''
-    if ($push.Text -match 'Connection was reset|Recv failure|timed out|Could not connect|Failed to connect|Recv failure|SSL_ERROR|OpenSSL SSL|Connection reset') {
-        Write-Host "  A) 网络被重置 / 连不上 GitHub（当前就是这一类）" -ForegroundColor Yellow
-        Write-Host "     1. 先直接重跑本脚本 2-3 次，网络抖动多半能过；"
-        Write-Host "     2. 若开了 VPN / 代理软件，把它监听的本地端口交给脚本："
-        Write-Host "        .\publish.ps1 -Proxy http://127.0.0.1:7890" -ForegroundColor Cyan
-        Write-Host "        想长期生效：git config --local http.proxy http://127.0.0.1:7890"
-        Write-Host "        取消：git config --local --unset http.proxy"
-        Write-Host "     3. 或改用 SSH 推送（不受 HTTPS 重置影响）："
-        $pubFile = Get-ChildItem "$env:USERPROFILE\.ssh" -Filter '*.pub' -ErrorAction SilentlyContinue | Select-Object -First 1
-        Write-Host "        第一步：把下面这把公钥加到 GitHub → Settings → SSH and GPG keys → New SSH key" -ForegroundColor Yellow
-        if ($pubFile) { Write-Host ("        " + (Get-Content $pubFile.FullName -Raw).Trim()) -ForegroundColor Cyan }
-        else { Write-Host "        （未找到 %USERPROFILE%\.ssh\*.pub，先运行 ssh-keygen -t ed25519）" -ForegroundColor DarkGray }
-        Write-Host "        第二步：在本目录执行" -ForegroundColor Yellow
-        Write-Host "        git remote set-url origin git@github.com:$slug.git" -ForegroundColor Cyan
-        Write-Host "        git push -u origin HEAD" -ForegroundColor Cyan
-        Write-Host "        若 22 端口也被封：在 %USERPROFILE%\.ssh\config 写入" -ForegroundColor DarkGray
-        Write-Host "        Host github.com  /  HostName ssh.github.com  /  Port 443  /  User git  /  IdentityFile ~/.ssh/你的私钥" -ForegroundColor DarkGray
+    $slug = ($originUrl -replace '^https://github[.]com/', '') -replace '[.]git$', ''
+    $sshDir = Join-Path $env:USERPROFILE '.ssh'
+    if ($push.Text -match 'Connection was reset|Recv failure|timed out|Could not connect|Failed to connect|Connection reset|SSL_ERROR|OpenSSL SSL') {
+        Write-Host "  A) 连不上 / 连上被重置 GitHub（当前就是这一类）" -ForegroundColor Yellow
+        if ($aliveProxy) {
+            Write-Host "     · 本机代理 $aliveProxy 已自动尝试但仍失败：确认代理软件在正常运行、且能访问 GitHub；"
+            Write-Host "       也可以手动指定：.\publish.ps1 -Proxy http://127.0.0.1:端口" -ForegroundColor Cyan
+        } else {
+            Write-Host "     · 没有检测到本机代理。若你有 VPN / 代理软件，先启动它，再执行："
+            Write-Host "       .\publish.ps1 -Proxy http://127.0.0.1:端口" -ForegroundColor Cyan
+        }
+        Write-Host "     · 换网络（手机热点）再试一次，往往立刻就好；"
+        Write-Host "     · 或改用 SSH（本机测试 github.com:22 与 ssh.github.com:443 都是通的）："
+        Write-Host "       1) 把下面这把公钥加到 GitHub → Settings → SSH and GPG keys → New SSH key" -ForegroundColor Yellow
+        $pubFile = Get-ChildItem $sshDir -Filter '*.pub' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($pubFile) { Write-Host ("          " + (Get-Content $pubFile.FullName -Raw).Trim()) -ForegroundColor Cyan }
+        else { Write-Host "          （未找到公钥，先运行 ssh-keygen -t ed25519）" -ForegroundColor DarkGray }
+        Write-Host "       2) 在本目录执行：" -ForegroundColor Yellow
+        Write-Host "          git remote set-url origin git@github.com:$slug.git" -ForegroundColor Cyan
+        Write-Host "          git push -u origin HEAD" -ForegroundColor Cyan
+        Write-Host "       3) 若 22 端口不通，把 ssh.github.com:443 写进 SSH 配置（" + (Join-Path $sshDir 'config') + "）：" -ForegroundColor DarkGray
+        Write-Host "          Host github.com / HostName ssh.github.com / Port 443 / User git / IdentityFile ~/.ssh/你的私钥" -ForegroundColor DarkGray
     } else {
         Write-Host "  B) 认证 / 仓库权限问题" -ForegroundColor Yellow
         Write-Host "     → 重新运行一次 首次配置.bat；弹窗选 Browser 浏览器授权；被要求输入时 Password 处粘贴令牌（不是账号密码）"
