@@ -5242,7 +5242,7 @@ if(new URLSearchParams(location.search).get('page')==='meeting')showMeeting();
         card('整体整改完成率',rate.toFixed(2),'%','▣','已整改'+d.closed+'个 / 问题共'+d.issueTotal+'个',true)+
         card('见证送检总数',d.witness,'个','▤','沿用原见证送检口径')+
         card('进场验收总数',d.acceptance,'个','▣','沿用原进场验收口径'):
-        card('安全问题总数',d.issueTotal,'个','▦','未整改'+d.pending+'个 / 已整改'+d.closed+'个')+
+        card('安全问题总数',d.issueTotal,'个','▦','逾期数'+d.overdue+'个')+
         card('整体整改完成率',rate.toFixed(2),'%','▣','已整改'+d.closed+'个 / 问题共'+d.issueTotal+'个',true))+
       '</div>';
     const thirdCounts=quality?[1,1,1,1,0,0]:[1,1,1,1,1,0];
