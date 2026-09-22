@@ -1194,11 +1194,11 @@
             </div></section>
             <section class="contract-section">
               <div class="contract-section-head"><div><h2 class="contract-section-title">付款阶段与判定依据</h2><div class="form-hint">系统按阶段顺序确定当前可录阶段，后续阶段不可提前付款；按款项类别读取该阶段的里程碑或工程量判定方式。</div></div></div>
-              <div class="table-wrap"><table><thead><tr><th>顺序</th><th>付款阶段</th><th>付款判定</th><th>判定依据</th><th>阶段比例</th><th>累计触发比例</th><th>阶段应付金额</th><th>阶段已付金额</th></tr></thead><tbody id="payment-stage-status-tbody"></tbody></table></div>
+              <div class="table-wrap"><table><thead><tr><th>顺序</th><th>款项类别</th><th>付款判定</th><th>判定依据</th><th>付款比例（%）</th><th>付款金额（元）</th><th>累计支付金额（元）</th></tr></thead><tbody id="payment-stage-status-tbody"></tbody></table></div>
             </section>
             <section class="contract-section">
               <div class="contract-section-head"><div><h2 class="contract-section-title">付款信息</h2><div class="form-hint">本阶段累计已付加本期金额达到阶段应付金额时，按合同约定判定：里程碑全部完成，或实际工程量达到约定工程量。</div></div><button class="primary with-icon" id="new-payment"><svg><use href="#i-plus"></use></svg>新增</button></div>
-              <div class="table-wrap"><table><thead><tr><th>序号</th><th>付款阶段</th><th>本期付款金额（元）</th><th>付款比例（%）</th><th>款项类别</th><th>付款时间</th><th>操作</th></tr></thead><tbody id="payment-history-tbody"></tbody></table></div>
+              <div class="table-wrap"><table><thead><tr><th>序号</th><th>本期付款金额（元）</th><th>付款比例（%）</th><th>款项类别</th><th>付款时间</th><th>是否触发校验</th><th>判定依据</th><th>操作</th></tr></thead><tbody id="payment-history-tbody"></tbody></table></div>
             </section>
           </section>
         </div>
@@ -1610,8 +1610,8 @@
       { id: 4, name: '质保款', ratio: 5, condition: '质保期满且无遗留问题', verify: 'milestone', milestones: ['m7'], quantity: 0, quantityUnit: '', paid: 0 }
     ];
     const paymentHistory = [
-      { amount: 10000, ratio: 10, stage: '预付款', stageNo: 1, date: '2026-07-20', quantity: null, validation: '里程碑校验通过' },
-      { amount: 50000, ratio: 60, stage: '进度款', stageNo: 2, date: '2026-09-02', quantity: 6, validation: '未达到阶段应付金额，未触发工程量校验' }
+      { amount: 10000, ratio: 10, stage: '预付款', stageNo: 1, date: '2026-07-20', verify: 'milestone', triggered: true, milestoneBasis: [{ name: '项目正式开工', completed: true }], quantity: null, validation: '里程碑校验通过' },
+      { amount: 50000, ratio: 50, stage: '进度款', stageNo: 2, date: '2026-09-02', verify: 'quantity', triggered: false, milestoneBasis: [], quantity: 6, agreedQuantity: 6, quantityUnit: '万m³', validation: '未达到阶段应付金额，未触发工程量校验' }
     ];
     let editingMilestoneStageId = null;
 
@@ -1961,6 +1961,15 @@
       return milestoneTags(stage.milestones, true);
     }
 
+    // 付款台账按付款当时的判定依据快照展示，避免后续里程碑状态或合同配置变化改写历史记录
+    function paymentRecordBasisHtml(record) {
+      if (record.verify === 'quantity') {
+        const unit = escapeHtml(record.quantityUnit || '');
+        return '实际工程量 ' + Number(record.quantity).toFixed(2) + ' ' + unit + '<span class="muted">（约定工程量 ' + Number(record.agreedQuantity).toFixed(2) + ' ' + unit + '）</span>';
+      }
+      return (record.milestoneBasis || []).map(item => '<span class="milestone-tag">' + escapeHtml(item.name) + ' · ' + (item.completed ? '已完成' : '未完成') + '</span>').join(' ') || '<span class="muted">未关联里程碑</span>';
+    }
+
     function cumulativeStageRatio(index) {
       return contractStages.slice(0, index + 1).reduce((sum, stage) => sum + Number(stage.ratio || 0), 0);
     }
@@ -2063,10 +2072,10 @@
         return '<tr><td><span class="stage-order">' + (index + 1) + '</span></td><td>' + stage.name + '</td>' +
           '<td><span class="verify-chip' + (stage.verify === 'quantity' ? ' quantity' : '') + '">' + stageVerifyLabel(stage) + '</span></td>' +
           '<td><div class="verify-basis">' + stageBasisHtml(stage) + '</div></td>' +
-          '<td>' + Number(stage.ratio).toFixed(2) + '%</td><td>' + cumulativeStageRatio(index).toFixed(2) + '%</td>' +
+          '<td>' + Number(stage.ratio).toFixed(2) + '%</td>' +
           '<td>' + amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(stage.paid || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td></tr>';
       }).join('');
-      document.getElementById('payment-history-tbody').innerHTML = paymentHistory.map((record, index) => '<tr><td>' + (index + 1) + '</td><td>' + (record.stageNo || '') + '</td><td>' + record.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(record.ratio).toFixed(2) + '%</td><td>' + record.stage + '</td><td>' + record.date + '</td><td><button class="text-button">查看附件</button></td></tr>').join('');
+      document.getElementById('payment-history-tbody').innerHTML = paymentHistory.map((record, index) => '<tr><td>' + (index + 1) + '</td><td>' + record.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(record.ratio).toFixed(2) + '%</td><td>' + escapeHtml(record.stage) + '</td><td>' + record.date + '</td><td>' + (record.triggered ? '<span class="verify-chip">是</span>' : '<span class="muted">否</span>') + '</td><td><div class="verify-basis">' + paymentRecordBasisHtml(record) + '</div></td><td><button class="text-button">查看附件</button></td></tr>').join('');
     }
 
     function renderPaymentMilestoneCheck(stage) {
@@ -2688,7 +2697,14 @@
         }
       }
       stage.paid += amount;
-      paymentHistory.push({ amount, ratio: afterRatio, stage: stage.name, stageNo: index + 1, date: document.getElementById('payment-date').value, quantity, validation: reaches ? (byQuantity ? '工程量校验通过' : '里程碑校验通过') : '未达阶段应付金额，未触发' });
+      paymentHistory.push({
+        amount, ratio: amount / contractTotal * 100, stage: stage.name, stageNo: index + 1,
+        date: document.getElementById('payment-date').value, verify: stage.verify, triggered: reaches,
+        milestoneBasis: byQuantity ? [] : stage.milestones.map(id => milestoneCatalog.find(item => item.id === id)).filter(Boolean).map(item => ({ name: item.name, completed: item.completed })),
+        quantity, agreedQuantity: byQuantity ? Number(stage.quantity || 0) : null,
+        quantityUnit: byQuantity ? stage.quantityUnit : '',
+        validation: reaches ? (byQuantity ? '工程量校验通过' : '里程碑校验通过') : '未达阶段应付金额，未触发'
+      });
       closeModal('payment-modal');
       renderPaymentData();
       showToast(reaches ? '付款新增成功，' + (byQuantity ? '工程量校验已通过' : '里程碑校验已通过') : '付款新增成功，本次未达到阶段触发比例');
