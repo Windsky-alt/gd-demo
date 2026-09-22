@@ -645,9 +645,8 @@
     .verify-chip { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; color: #245fbf; background: #eaf2ff; font-size: 11px; white-space: nowrap; }
     .verify-chip.quantity { color: #875b14; background: #fff7e8; }
     .stage-verify-hint { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
-    .stage-quantity-entry { display: flex; gap: 4px; min-width: 150px; }
+    .stage-quantity-entry { display: flex; align-items: center; gap: 6px; min-width: 120px; }
     .stage-quantity-entry input { width: 72px; min-width: 0; }
-    .stage-quantity-entry select { width: 72px; min-width: 0; }
     .verify-basis { color: #30343b; font-size: 12px; line-height: 1.7; }
     .verify-basis .muted { color: var(--muted); }
     .stage-order { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; background: var(--primary); font-size: 11px; }
@@ -1152,10 +1151,10 @@
               <label class="field" style="display:block;margin-top:18px"><span class="field-label required">合同主要内容</span><textarea class="textarea">重建一层路面水泥及配套工程。</textarea></label>
             </section>
             <section class="contract-section">
-              <div class="contract-section-head"><div><h2 class="contract-section-title">付款比例和阶段</h2><div class="form-hint">各阶段按顺序执行；付款判定选“里程碑”时须关联进度里程碑（可多选），选“工程量”时须填写约定工程量及计量单位。</div></div><button class="primary with-icon" id="add-payment-stage"><svg><use href="#i-plus"></use></svg>新增阶段</button></div>
+              <div class="contract-section-head"><div><h2 class="contract-section-title">付款比例和阶段</h2><div class="form-hint">各阶段按顺序执行；付款判定选“里程碑”时须关联进度里程碑（可多选），选“工程量”时须填写约定工程量（万元）。</div></div><button class="primary with-icon" id="add-payment-stage"><svg><use href="#i-plus"></use></svg>新增阶段</button></div>
               <div class="table-wrap">
                 <table>
-                  <thead><tr><th style="width:58px">顺序</th><th style="width:104px">款项类别</th><th style="width:100px">阶段比例（%）</th><th style="width:116px">付款金额（元）</th><th style="width:110px">累计触发比例</th><th style="width:112px">付款判定<span style="color:#f53f3f">*</span></th><th style="width:230px">关联进度里程碑</th><th style="width:155px">约定工程量／单位</th><th>付款条件</th><th style="width:66px">操作</th></tr></thead>
+                  <thead><tr><th style="width:58px">顺序</th><th style="width:104px">款项类别</th><th style="width:100px">阶段比例（%）</th><th style="width:116px">付款金额（元）</th><th style="width:110px">累计触发比例</th><th style="width:112px">付款判定<span style="color:#f53f3f">*</span></th><th style="width:230px">关联进度里程碑</th><th style="width:155px">约定工程量（万元）</th><th>付款条件</th><th style="width:66px">操作</th></tr></thead>
                   <tbody id="contract-stage-tbody"></tbody>
                 </table>
               </div>
@@ -1198,7 +1197,7 @@
             </section>
             <section class="contract-section">
               <div class="contract-section-head"><div><h2 class="contract-section-title">付款信息</h2><div class="form-hint">本阶段累计已付加本期金额达到阶段应付金额时，按合同约定判定：里程碑全部完成，或实际工程量达到约定工程量。</div></div><button class="primary with-icon" id="new-payment"><svg><use href="#i-plus"></use></svg>新增</button></div>
-              <div class="table-wrap"><table><thead><tr><th>序号</th><th>本期付款金额（元）</th><th>付款比例（%）</th><th>款项类别</th><th>付款时间</th><th>是否触发校验</th><th>判定依据</th><th>操作</th></tr></thead><tbody id="payment-history-tbody"></tbody></table></div>
+              <div class="table-wrap"><table><thead><tr><th>序号</th><th>本期付款金额（元）</th><th>付款比例（%）</th><th>款项类别</th><th>付款时间</th><th>操作</th></tr></thead><tbody id="payment-history-tbody"></tbody></table></div>
             </section>
           </section>
         </div>
@@ -1372,8 +1371,8 @@
           <label class="field"><span class="field-label required">本期付款金额（元）</span><input class="control" id="payment-amount" type="number" min="0.01" step="0.01" value="10000"></label>
           <label class="field"><span class="field-label required">款项类别</span><select class="select" id="payment-stage-select"></select></label>
           <label class="field"><span class="field-label">付款比例（%）</span><input class="control readonly" id="after-payment-ratio" value="70.00%" readonly></label>
-          <label class="field hidden" id="payment-agreed-quantity-field"><span class="field-label" id="payment-agreed-quantity-label">约定工程量</span><input class="control readonly" id="payment-agreed-quantity" readonly></label>
-          <label class="field hidden" id="payment-quantity-field"><span class="field-label required" id="payment-quantity-label">实际工程量</span><input class="control" id="payment-quantity" type="number" min="0" step="0.01" placeholder="请输入实际工程量"></label>
+          <label class="field hidden" id="payment-agreed-quantity-field"><span class="field-label" id="payment-agreed-quantity-label">约定工程量（万元）</span><input class="control readonly" id="payment-agreed-quantity" readonly></label>
+          <label class="field hidden" id="payment-quantity-field"><span class="field-label required" id="payment-quantity-label">实际工程量（万元）</span><input class="control" id="payment-quantity" type="number" min="0" step="0.01" placeholder="请输入实际工程量"></label>
         </div>
         <div class="payment-check" id="payment-check-section">
           <div class="payment-check-head"><strong id="payment-check-head-title">当前阶段里程碑校验</strong><span id="payment-trigger-text">达到70%，提交时触发校验</span></div>
@@ -1592,7 +1591,7 @@
     };
 
     const contractTotal = 100000;
-    const quantityUnits = ['m³', '万m³', '㎡', 'm', '项', '套'];
+    const quantityUnit = '万元';
     const milestoneCatalog = [
       { id: 'm1', name: '项目正式开工', planDate: '2026-07-16', completed: true },
       { id: 'm2', name: '基础工程完成', planDate: '2026-09-05', completed: true },
@@ -1602,16 +1601,16 @@
       { id: 'm6', name: '结算审定完成', planDate: '2027-09-30', completed: false },
       { id: 'm7', name: '质保期届满', planDate: '2028-09-30', completed: false }
     ];
-    // verify：付款判定（校验方式）milestone=里程碑、quantity=工程量；quantity 是合同约定工程量，付款时填累计实际工程量，二者使用同一计量单位
+    // verify：付款判定（校验方式）milestone=里程碑、quantity=工程量；工程量统一以万元计，付款时填累计实际工程量
     const contractStages = [
-      { id: 1, name: '预付款', ratio: 10, condition: '合同签订并具备开工条件', verify: 'milestone', milestones: ['m1'], quantity: 0, quantityUnit: '', paid: 10000 },
-      { id: 2, name: '进度款', ratio: 60, condition: '按合同约定完成阶段工作', verify: 'quantity', milestones: ['m2', 'm3'], quantity: 6, quantityUnit: '万m³', paid: 50000 },
-      { id: 3, name: '结算款', ratio: 25, condition: '完成竣工验收及结算审定', verify: 'milestone', milestones: ['m5', 'm6'], quantity: 0, quantityUnit: '', paid: 0 },
-      { id: 4, name: '质保款', ratio: 5, condition: '质保期满且无遗留问题', verify: 'milestone', milestones: ['m7'], quantity: 0, quantityUnit: '', paid: 0 }
+      { id: 1, name: '预付款', ratio: 10, condition: '合同签订并具备开工条件', verify: 'milestone', milestones: ['m1'], quantity: 0, paid: 10000 },
+      { id: 2, name: '进度款', ratio: 60, condition: '按合同约定完成阶段工作', verify: 'quantity', milestones: ['m2', 'm3'], quantity: 6, paid: 50000 },
+      { id: 3, name: '结算款', ratio: 25, condition: '完成竣工验收及结算审定', verify: 'milestone', milestones: ['m5', 'm6'], quantity: 0, paid: 0 },
+      { id: 4, name: '质保款', ratio: 5, condition: '质保期满且无遗留问题', verify: 'milestone', milestones: ['m7'], quantity: 0, paid: 0 }
     ];
     const paymentHistory = [
-      { amount: 10000, ratio: 10, stage: '预付款', stageNo: 1, date: '2026-07-20', verify: 'milestone', triggered: true, milestoneBasis: [{ name: '项目正式开工', completed: true }], quantity: null, validation: '里程碑校验通过' },
-      { amount: 50000, ratio: 50, stage: '进度款', stageNo: 2, date: '2026-09-02', verify: 'quantity', triggered: false, milestoneBasis: [], quantity: 6, agreedQuantity: 6, quantityUnit: '万m³', validation: '未达到阶段应付金额，未触发工程量校验' }
+      { amount: 10000, ratio: 10, stage: '预付款', stageNo: 1, date: '2026-07-20', verify: 'milestone', quantity: null, validation: '里程碑校验通过' },
+      { amount: 50000, ratio: 50, stage: '进度款', stageNo: 2, date: '2026-09-02', verify: 'quantity', quantity: 6, validation: '未达到阶段应付金额，未触发工程量校验' }
     ];
     let editingMilestoneStageId = null;
 
@@ -1955,19 +1954,9 @@
 
     function stageBasisHtml(stage) {
       if (stage.verify === 'quantity') {
-        const unit = escapeHtml(stage.quantityUnit || '');
-        return '约定工程量 <strong>' + Number(stage.quantity || 0).toFixed(2) + '</strong> ' + unit + '<span class="muted">（最近记录实际工程量 ' + stageQuantityActual(stage).toFixed(2) + ' ' + unit + '）</span>';
+        return '约定工程量 <strong>' + Number(stage.quantity || 0).toFixed(2) + '</strong> ' + quantityUnit + '<span class="muted">（最近记录实际工程量 ' + stageQuantityActual(stage).toFixed(2) + ' ' + quantityUnit + '）</span>';
       }
       return milestoneTags(stage.milestones, true);
-    }
-
-    // 付款台账按付款当时的判定依据快照展示，避免后续里程碑状态或合同配置变化改写历史记录
-    function paymentRecordBasisHtml(record) {
-      if (record.verify === 'quantity') {
-        const unit = escapeHtml(record.quantityUnit || '');
-        return '实际工程量 ' + Number(record.quantity).toFixed(2) + ' ' + unit + '<span class="muted">（约定工程量 ' + Number(record.agreedQuantity).toFixed(2) + ' ' + unit + '）</span>';
-      }
-      return (record.milestoneBasis || []).map(item => '<span class="milestone-tag">' + escapeHtml(item.name) + ' · ' + (item.completed ? '已完成' : '未完成') + '</span>').join(' ') || '<span class="muted">未关联里程碑</span>';
     }
 
     function cumulativeStageRatio(index) {
@@ -2000,7 +1989,7 @@
         '<td><strong>' + cumulativeStageRatio(index).toFixed(2) + '%</strong></td>' +
         '<td><select class="select stage-verify-input" data-stage-id="' + stage.id + '"><option value="milestone"' + (byQuantity ? '' : ' selected') + '>里程碑</option><option value="quantity"' + (byQuantity ? ' selected' : '') + '>工程量</option></select></td>' +
         '<td>' + (byQuantity ? '<span style="color:#c9cdd4">—</span>' : '<div class="milestone-picker"><span class="stage-mile-tags">' + milestoneTags(stage.milestones, false) + '</span><button class="text-button choose-milestones" data-stage-id="' + stage.id + '">选择</button></div>') + '</td>' +
-        '<td>' + (byQuantity ? '<div class="stage-quantity-entry"><input class="control stage-quantity-input" data-stage-id="' + stage.id + '" type="number" min="0" step="0.01" value="' + Number(stage.quantity || 0) + '" aria-label="约定工程量"><select class="select stage-quantity-unit-input" data-stage-id="' + stage.id + '" aria-label="计量单位">' + quantityUnits.map(unit => '<option value="' + unit + '"' + (unit === (stage.quantityUnit || 'm³') ? ' selected' : '') + '>' + unit + '</option>').join('') + '</select></div>' : '<span style="color:#c9cdd4">—</span>') + '</td>' +
+        '<td>' + (byQuantity ? '<div class="stage-quantity-entry"><input class="control stage-quantity-input" data-stage-id="' + stage.id + '" type="number" min="0" step="0.01" value="' + Number(stage.quantity || 0) + '" aria-label="约定工程量（万元）"><span>万元</span></div>' : '<span style="color:#c9cdd4">—</span>') + '</td>' +
         '<td><input class="control stage-condition-input" data-stage-id="' + stage.id + '" value="' + escapeHtml(stage.condition) + '"></td>' +
         '<td><button class="text-button remove-stage" data-stage-id="' + stage.id + '">删除</button></td></tr>';
       }).join('');
@@ -2020,13 +2009,10 @@
         stage.verify = event.target.value;
         if (stage.verify === 'quantity') stage.quantity = Number(stage.quantity || 0) || 0;
         renderContractStages();
-        showToast(stage.verify === 'quantity' ? '已改为工程量判定，请填写约定工程量及计量单位' : '已改为里程碑判定，请选择关联进度里程碑');
+        showToast(stage.verify === 'quantity' ? '已改为工程量判定，请填写约定工程量（万元）' : '已改为里程碑判定，请选择关联进度里程碑');
       }));
       document.querySelectorAll('.stage-quantity-input').forEach(input => input.addEventListener('input', event => {
         contractStages.find(stage => stage.id === Number(event.target.dataset.stageId)).quantity = Number(event.target.value || 0);
-      }));
-      document.querySelectorAll('.stage-quantity-unit-input').forEach(select => select.addEventListener('change', event => {
-        contractStages.find(stage => stage.id === Number(event.target.dataset.stageId)).quantityUnit = event.target.value;
       }));
       document.querySelectorAll('.stage-condition-input').forEach(input => input.addEventListener('input', event => {
         contractStages.find(stage => stage.id === Number(event.target.dataset.stageId)).condition = event.target.value;
@@ -2075,7 +2061,7 @@
           '<td>' + Number(stage.ratio).toFixed(2) + '%</td>' +
           '<td>' + amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(stage.paid || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td></tr>';
       }).join('');
-      document.getElementById('payment-history-tbody').innerHTML = paymentHistory.map((record, index) => '<tr><td>' + (index + 1) + '</td><td>' + record.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(record.ratio).toFixed(2) + '%</td><td>' + escapeHtml(record.stage) + '</td><td>' + record.date + '</td><td>' + (record.triggered ? '<span class="verify-chip">是</span>' : '<span class="muted">否</span>') + '</td><td><div class="verify-basis">' + paymentRecordBasisHtml(record) + '</div></td><td><button class="text-button">查看附件</button></td></tr>').join('');
+      document.getElementById('payment-history-tbody').innerHTML = paymentHistory.map((record, index) => '<tr><td>' + (index + 1) + '</td><td>' + record.amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 }) + '</td><td>' + Number(record.ratio).toFixed(2) + '%</td><td>' + escapeHtml(record.stage) + '</td><td>' + record.date + '</td><td><button class="text-button">查看附件</button></td></tr>').join('');
     }
 
     function renderPaymentMilestoneCheck(stage) {
@@ -2109,15 +2095,15 @@
       let message = '';
       if (byQuantity && (!Number.isFinite(quantity) || quantity < 0)) {
         pass = false;
-        message = '请填写本次付款时的累计实际工程量（' + escapeHtml(stage.quantityUnit || 'm³') + '）；该字段必填，不会自动带入合同约定值。';
+        message = '请填写本次付款时的累计实际工程量（万元）；该字段必填，不会自动带入合同约定值。';
       } else if (byQuantity && !reaches) {
         message = '本次付款后本阶段累计已付 <strong>' + (Number(stage.paid || 0) + amount).toFixed(2) + ' 元</strong>，尚未达到阶段应付金额 ' + stageAmount(stage).toFixed(2) + ' 元；本次记录实际工程量，暂不校验是否达标。';
       } else if (byQuantity) {
         const required = Number(stage.quantity || 0);
         pass = quantity + 0.00001 >= required;
         message = pass
-          ? '本次付款后本阶段累计已付达到阶段应付金额 <strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，实际工程量 ' + quantity.toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + ' 不低于约定工程量 ' + required.toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + '，可以提交。'
-          : '本次付款后本阶段累计已付达到阶段应付金额 <strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，但实际工程量 <strong>' + quantity.toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + '</strong>低于约定工程量 ' + required.toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + '，未满足付款条件。';
+          ? '本次付款后本阶段累计已付达到阶段应付金额 <strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，实际工程量 ' + quantity.toFixed(2) + ' ' + quantityUnit + ' 不低于约定工程量 ' + required.toFixed(2) + ' ' + quantityUnit + '，可以提交。'
+          : '本次付款后本阶段累计已付达到阶段应付金额 <strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，但实际工程量 <strong>' + quantity.toFixed(2) + ' ' + quantityUnit + '</strong>低于约定工程量 ' + required.toFixed(2) + ' ' + quantityUnit + '，未满足付款条件。';
       } else if (!reaches) {
         message = '本次付款后付款比例为 <strong>' + afterRatio.toFixed(2) + '%</strong>，尚未达到当前阶段 ' + triggerRatio.toFixed(2) + '% 的触发比例，本次不校验里程碑。';
       } else {
@@ -2153,8 +2139,8 @@
       document.getElementById('payment-agreed-quantity-field').classList.toggle('hidden', !byQuantity);
       document.getElementById('payment-quantity-field').classList.toggle('hidden', !byQuantity);
       document.getElementById('payment-check-section').classList.toggle('hidden', byQuantity);
-      document.getElementById('payment-agreed-quantity-label').textContent = '约定工程量（' + (stage.quantityUnit || 'm³') + '）';
-      document.getElementById('payment-quantity-label').textContent = '实际工程量（' + (stage.quantityUnit || 'm³') + '）';
+      document.getElementById('payment-agreed-quantity-label').textContent = '约定工程量（万元）';
+      document.getElementById('payment-quantity-label').textContent = '实际工程量（万元）';
       document.getElementById('payment-agreed-quantity').value = Number(stage.quantity || 0).toFixed(2);
       if (!keepAmount) document.getElementById('payment-quantity').value = '';
       document.getElementById('payment-check-head-title').textContent = '当前阶段里程碑校验';
@@ -2613,7 +2599,7 @@
     document.getElementById('contract-add-back').addEventListener('click', () => showContractPage('contract-list'));
     document.getElementById('cancel-contract').addEventListener('click', () => showContractPage('contract-list'));
     document.getElementById('add-payment-stage').addEventListener('click', () => {
-      contractStages.push({ id: Date.now(), name: '其他款', ratio: 0, condition: '', verify: 'milestone', milestones: [], quantity: 0, quantityUnit: 'm³', paid: 0 });
+      contractStages.push({ id: Date.now(), name: '其他款', ratio: 0, condition: '', verify: 'milestone', milestones: [], quantity: 0, paid: 0 });
       renderContractStages();
     });
     document.getElementById('confirm-milestones').addEventListener('click', () => {
@@ -2670,7 +2656,7 @@
       }
       if (byQuantity && (!Number.isFinite(quantity) || quantity < 0)) {
         box.classList.remove('success');
-        box.innerHTML = '款项类别“' + escapeHtml(stage.name) + '”采用工程量校验，请填写实际工程量（' + escapeHtml(stage.quantityUnit || 'm³') + '）。';
+        box.innerHTML = '款项类别“' + escapeHtml(stage.name) + '”采用工程量校验，请填写实际工程量（万元）。';
         showToast('请填写实际工程量');
         return;
       }
@@ -2680,7 +2666,7 @@
       const reaches = Number(stage.paid || 0) + amount + 0.001 >= stageAmount(stage);
       if (reaches && byQuantity && quantity + 0.00001 < Number(stage.quantity || 0)) {
         box.classList.remove('success');
-        box.innerHTML = '本次付款后本阶段累计已付达到阶段应付金额<strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，但实际工程量 <strong>' + quantity.toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + '</strong>低于约定工程量 ' + Number(stage.quantity || 0).toFixed(2) + ' ' + escapeHtml(stage.quantityUnit || 'm³') + '，未满足付款条件。';
+        box.innerHTML = '本次付款后本阶段累计已付达到阶段应付金额<strong>' + stageAmount(stage).toFixed(2) + ' 元</strong>，但实际工程量 <strong>' + quantity.toFixed(2) + ' ' + quantityUnit + '</strong>低于约定工程量 ' + Number(stage.quantity || 0).toFixed(2) + ' ' + quantityUnit + '，未满足付款条件。';
         showToast('实际工程量未达到约定工程量');
         return;
       }
@@ -2699,10 +2685,8 @@
       stage.paid += amount;
       paymentHistory.push({
         amount, ratio: amount / contractTotal * 100, stage: stage.name, stageNo: index + 1,
-        date: document.getElementById('payment-date').value, verify: stage.verify, triggered: reaches,
-        milestoneBasis: byQuantity ? [] : stage.milestones.map(id => milestoneCatalog.find(item => item.id === id)).filter(Boolean).map(item => ({ name: item.name, completed: item.completed })),
-        quantity, agreedQuantity: byQuantity ? Number(stage.quantity || 0) : null,
-        quantityUnit: byQuantity ? stage.quantityUnit : '',
+        date: document.getElementById('payment-date').value, verify: stage.verify,
+        quantity,
         validation: reaches ? (byQuantity ? '工程量校验通过' : '里程碑校验通过') : '未达阶段应付金额，未触发'
       });
       closeModal('payment-modal');
