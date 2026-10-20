@@ -103,7 +103,7 @@ if (-not $RenderOnly) {
 
     # 另存一份可下载的单文件演示（浏览器打开 index.html 会直接显示，
     # 想「下载」需要一个带扩展名的独立文件名 + 链接上的 download 属性）
-    $htmlFile = "安全质量演示-V$prdVer.html"
+    $htmlFile = "平台演示-V$prdVer.html"
     Copy-Item $Source (Join-Path $verDir $htmlFile) -Force
 
     $meta = '{' + "`n" +
@@ -167,7 +167,7 @@ $latestHtml = if ($latest) {
     '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Html + '" download>下载演示文件（HTML）</a>'
 } else { '' }
 $latestDocx = if ($latest -and $latest.Docx) {
-    '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Docx + '">下载需求说明书 ' + $latestVer + '</a>'
+    '<a class="btn ghost" href="versions/' + $latest.Dir + '/' + $latest.Docx + '">下载安全质量需求说明书 ' + $latestVer + '</a>'
 } else { '' }
 $updatedAt = (Get-Date).ToString('yyyy-MM-dd HH:mm')
 
@@ -177,7 +177,7 @@ $tpl = @'
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>安全质量模块 · 研发演示站</title>
+<title>工程数字化管理平台 · 研发演示站</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font:14px/1.7 "Microsoft YaHei",system-ui,sans-serif;color:#26364d;background:#f4f7fb}
@@ -214,7 +214,7 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
 </head>
 <body>
 <div class="wrap">
-  <h1>安全质量管理模块 · 研发演示站</h1>
+  <h1>工程数字化管理平台 · 研发演示站</h1>
   <p class="sub">本地址固定不变，每次发布只更新内容，请直接收藏本页。</p>
 
   <div class="card">
@@ -231,7 +231,7 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
 
   <h3>历史版本</h3>
   <table>
-    <thead><tr><th>版本</th><th>日期</th><th>更新说明</th><th>演示</th><th>需求文档</th></tr></thead>
+    <thead><tr><th>版本</th><th>日期</th><th>更新说明</th><th>演示</th><th>安全质量需求文档</th></tr></thead>
     <tbody>
 {{ROWS}}    </tbody>
   </table>
@@ -239,11 +239,11 @@ footer{margin-top:30px;color:#86909c;font-size:12px;text-align:center}
   <div class="tips">
     <p><b>地址说明</b>：<code>latest.html</code> 始终指向最新版，可长期作为研发的固定入口；<code>versions/</code> 下是按日期归档的历史快照，用于回溯"当时那一版长什么样"。</p>
     <p><b>下载演示文件</b>：演示是<b>完全自包含的单文件 HTML</b>（无外部 JS/CSS/图片依赖）。点「下载演示文件（HTML）」保存到本地后，双击即可离线打开，也可以直接转发给别人；历史版本里每一版都能单独下载。</p>
-    <p><b>需求文档</b>：与演示同版本的 Word 文档随版本一起归档，点右侧"下载"获取。</p>
+    <p><b>安全质量需求文档</b>：对应版本的 Word 文档随演示归档，点右侧“下载”获取；其他模块以演示页面为准。</p>
     <p><b>如何更新</b>：在本地 <code>demo-site</code> 目录双击 <code>发布更新.bat</code>，填写更新说明即可。地址不变，无需再逐个发文件。</p>
   </div>
 
-  <footer>安全质量管理模块 · 演示原型与需求说明</footer>
+  <footer>工程数字化管理平台 · 演示原型与需求说明</footer>
 </div>
 </body>
 </html>
