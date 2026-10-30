@@ -19,6 +19,7 @@ param(
     [string]$Source,
     [string]$Docx,
     [string]$Note = '',
+    [string]$SnapshotTag = '',
     [string]$Proxy = '',
     [switch]$RenderOnly,
     [switch]$NoPush,
@@ -74,6 +75,10 @@ if (-not $RenderOnly) {
     $prdVer = if ($m.Success) { $m.Groups[1].Value } else { '0' }
     $today = (Get-Date).ToString('yyyy-MM-dd')
     $verName = "$today-v$prdVer"
+    if ($SnapshotTag) {
+        if ($SnapshotTag -notmatch '^[a-zA-Z0-9-]+$') { throw "Invalid snapshot tag" }
+        $verName += "-$SnapshotTag"
+    }
     $verDir = Join-Path $root "versions\$verName"
 
     # 提示一：同一天同一版本号会覆盖已有快照，历史列表不会新增一行
