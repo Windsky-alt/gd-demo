@@ -6113,6 +6113,126 @@ if(new URLSearchParams(location.search).get('page')==='meeting')showMeeting();
 
 .nm-station-project-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 22px;background:linear-gradient(110deg,#eaf2ff 0%,#effaff 55%,#c7e6fa 78%,#eaf2ff 100%);border:1px solid #dce9f8;margin-bottom:16px;min-height:82px}.nm-station-project-info{display:flex;align-items:center;gap:20px;flex-wrap:wrap;flex:1;min-width:0}.nm-station-current-project-tag{display:inline-flex;align-items:center;justify-content:center;background:#2876ee;color:#fff;border-radius:2px;padding:8px 12px;white-space:nowrap;font-size:13px}.nm-station-current-project-name{font-size:17px;color:#19314c;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nm-station-project-meta{display:flex;align-items:center;gap:22px;flex-wrap:wrap;font-size:12px;color:#7c8ba2}.nm-station-project-meta>span{white-space:nowrap}.nm-station-project-meta b{color:#1973eb;margin-left:6px;font-size:13px;font-weight:600}.nm-station-project-pagination{display:flex;align-items:center;gap:15px;margin-left:auto;flex:none}.nm-station-project-page-btn{height:36px;padding:0 16px;border:1px solid #d8e2ef;background:#fff;color:#6a7e99;font-size:14px;cursor:pointer}.nm-station-project-page-btn:disabled{opacity:.45;cursor:not-allowed}.nm-station-project-page{display:inline-flex;align-items:center;justify-content:center;min-width:66px;height:36px;padding:0 10px;background:#2876ee;color:#fff;font-size:17px;font-weight:700;white-space:nowrap}@media(max-width:1380px){.nm-station-project-banner{padding:16px;gap:12px}.nm-station-project-info{gap:12px}.nm-station-current-project-name{font-size:15px;max-width:310px}.nm-station-project-meta{gap:15px}.nm-station-project-pagination{gap:10px}}
 
+/* === ASSET_REDESIGN_CSS_START === */
+.nm-auto-archive-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid #dbe8fb;background:#f5f9ff;color:#43658f;font-size:12px;line-height:1.7;margin:0 0 16px;border-radius:4px}
+.nm-auto-archive-banner svg{width:17px;height:17px;flex:none;fill:none;stroke:#2876ee;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nm-archive-split{grid-template-columns:286px minmax(0,1fr)}
+.nm-archive-tree{padding:0;min-height:560px;display:flex;flex-direction:column;overflow:visible}
+.nm-archive-tree-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:16px 14px 12px}
+.nm-archive-tree-head .nm-tree-title{padding:0;border:0;margin:0;font-size:15px;white-space:nowrap}
+.nm-archive-level{position:relative;flex:none}
+.nm-archive-level-trigger{display:inline-flex!important;align-items:center;justify-content:space-between;gap:8px;min-width:106px;height:31px;padding:0 9px!important;border:1px solid #d9dfe8!important;border-radius:3px;background:#fff!important;color:#7b8798;font:inherit;font-size:12px;width:auto!important}
+.nm-archive-level-trigger:hover{border-color:#175bdd!important;color:#175bdd!important}
+.nm-archive-level-trigger svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nm-archive-level-menu{position:absolute;right:0;top:36px;z-index:30;min-width:138px;background:#fff;border:1px solid #e1e6ef;box-shadow:0 8px 24px #1d35551f;padding:5px;border-radius:3px}
+.nm-archive-level-menu[hidden]{display:none}
+.nm-archive-level-menu button{display:block;width:100%;text-align:left;border:0;background:#fff;padding:8px 10px;font:inherit;font-size:12px;color:#4e5969;border-radius:2px;cursor:pointer}
+.nm-archive-level-menu button:hover{background:#f2f7ff;color:#175bdd}
+.nm-archive-filter{display:flex;align-items:center;gap:7px;margin:0 12px 10px;padding:0 9px;height:34px;border:1px solid #dde4ee;border-radius:3px;color:#9aa6b5;background:#fff}
+.nm-archive-filter:focus-within{border-color:#175bdd;box-shadow:0 0 0 2px #dae8ff}
+.nm-archive-filter svg{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round}
+.nm-archive-filter input{flex:1;min-width:0;height:30px;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;padding:0!important;font-size:12px;color:#4e5969}
+.nm-archive-tree-body{padding:0 8px 16px}
+.nm-archive-all{display:flex!important;align-items:center;gap:8px;width:100%;border:0!important;background:#eaf2ff!important;color:#175bdd!important;font:inherit;font-size:13px!important;font-weight:600;padding:10px!important;border-radius:3px;text-align:left}
+.nm-archive-all svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linejoin:round}
+.nm-archive-all small{margin-left:auto;color:#5b8fe8;font-weight:400;font-size:12px}
+.nm-archive-node{display:flex;align-items:center;gap:3px;min-height:36px;padding:0 6px 0 calc(4px + var(--depth,0) * 16px);border-radius:3px}
+.nm-archive-node:hover{background:#f5f8fe}
+.nm-archive-node.active{background:#eaf2ff;color:#175bdd}
+.nm-archive-caret{flex:none;display:inline-flex!important;align-items:center;justify-content:center;width:20px!important;min-width:20px;height:28px;padding:0!important;border:0;background:transparent!important;color:#8a99ad;cursor:pointer}
+.nm-archive-caret svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.nm-archive-caret.open svg{transform:rotate(90deg)}
+.nm-archive-caret-spacer{visibility:hidden}
+.nm-archive-label{flex:1;min-width:0;display:flex!important;align-items:center;gap:7px;border:0!important;background:transparent!important;color:inherit!important;font:inherit;font-size:13px!important;text-align:left;padding:8px 0!important;overflow:hidden;width:auto!important}
+.nm-archive-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-archive-label svg{width:15px;height:15px;flex:none;fill:none;stroke:#7d9bc4;stroke-width:1.6;stroke-linejoin:round}
+.nm-archive-node.active .nm-archive-label svg{stroke:#3b82f6}
+.nm-archive-count{flex:none;margin-left:4px;color:#98a3b5;font-size:12px;line-height:1}
+.nm-archive-empty{padding:18px 10px;color:#9aa6b5;font-size:12px;text-align:center}
+.nm-archive-main{padding:20px 22px}
+.nm-archive-toolbar{margin:0 0 12px!important}
+.nm-archive-toolbar .nm-actions{gap:10px}
+.nm-auto-badge{display:inline-flex;align-items:center;color:#175bdd;background:#eaf2ff;border-radius:3px;padding:3px 8px;font-size:12px;white-space:nowrap}
+
+.nm-tree-select{position:relative}
+.nm-tree-select-trigger{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:34px;padding:5px 10px;border:1px solid #d9dfe8;border-radius:3px;background:#fff;color:#28344a;font:inherit;font-size:13px;text-align:left}
+.nm-tree-select-trigger:hover{border-color:#175bdd}
+.nm-tree-select-trigger[aria-expanded="true"]{border-color:#175bdd;box-shadow:0 0 0 2px #dae8ff}
+.nm-tree-select-trigger svg{width:12px;height:12px;flex:none;fill:none;stroke:#8a99ad;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nm-tree-select-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-tree-select-panel{position:absolute;right:0;top:calc(100% + 4px);z-index:40;display:flex;width:max-content;min-width:100%;max-width:min(680px,calc(100vw - 110px));max-height:220px;overflow:auto;background:#fff;border:1px solid #dfe5ee;box-shadow:0 10px 30px #1d35552b;border-radius:3px;padding:0}
+.nm-tree-select-panel[hidden]{display:none}
+.nm-tree-select-col{min-width:186px;max-width:230px;border-right:1px solid #eef1f5;padding:2px 0}
+.nm-tree-select-col:last-child{border-right:0}
+.nm-tree-select-option{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;font-size:12px;color:#4e5969;cursor:pointer;white-space:nowrap}
+.nm-tree-select-option:hover{background:#f5f8fe}
+.nm-tree-select-option.selected{background:#eaf2ff;color:#175bdd}
+.nm-radio{width:14px;height:14px;border:1px solid #c9d1de;border-radius:50%;flex:none;position:relative;background:#fff}
+.nm-tree-select-option.selected .nm-radio{border-color:#2876ee}
+.nm-tree-select-option.selected .nm-radio:after{content:'';position:absolute;inset:3px;border-radius:50%;background:#2876ee}
+.nm-option-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-option-expand{width:20px;height:24px;flex:none;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;color:#8a99ad;padding:0;cursor:pointer}
+.nm-option-expand:hover{color:#175bdd}
+.nm-option-expand svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.nm-parent-fixed{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:34px;padding:5px 10px;border:1px solid #e3e8f0;border-radius:3px;background:#f7f8fa;color:#5c6b80;font-size:13px}
+.nm-parent-fixed>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-parent-lock{flex:none;color:#98a3b5;font-size:11px;white-space:nowrap}
+.nm-field-tip{display:block;margin-top:6px;color:#98a3b5;font-size:11px;line-height:1.6}
+.nm-dialog-tree-select .nm-dialog-body{min-height:320px}
+
+.nm-transfer-page-head{display:flex;align-items:center;gap:14px;margin:0 0 22px;color:#4e5969}
+.nm-transfer-back{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;color:#4e5969;font:inherit;font-size:14px;cursor:pointer}
+.nm-transfer-back:hover{color:#175bdd}
+.nm-transfer-back-arrow{font-size:17px;line-height:1}
+.nm-transfer-divider{width:1px;height:16px;background:#d9dfe8}
+.nm-transfer-title{font-size:16px;font-weight:600;color:#28344a}
+.nm-asset-transfer-form{background:#fff;border:1px solid #e8ebf0;border-radius:5px;padding:24px 28px 30px;margin-bottom:16px}
+.nm-transfer-section{font-size:14px;font-weight:600;color:#28344a;margin:0 0 20px}
+.nm-transfer-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px;margin-bottom:4px}
+.nm-transfer-meta .nm-field>span{font-size:13px;color:#526077}
+.nm-transfer-meta .nm-field>span em{color:#e64b4b;font-style:normal}
+.nm-transfer-meta .nm-field>input{height:38px}
+.nm-transfer-count-box{display:flex;align-items:center;gap:7px;height:38px;padding:0 12px;border:1px solid #e3e8f0;background:#f7f8fa;color:#86909c;font-size:13px;border-radius:3px}
+.nm-transfer-count-box b{color:#28344a;font-weight:600}
+.nm-transfer-count-box small{margin-left:auto;color:#a1acbb;font-size:11px;white-space:nowrap}
+.nm-transfer-toolbar{display:flex;align-items:center;gap:16px;margin:20px 0 12px}
+.nm-transfer-selected{color:#86909c;font-size:12px}
+.nm-transfer-selected b{color:#175bdd;font-weight:600}
+.nm-transfer-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;min-width:900px}
+.nm-transfer-table th{height:42px;background:#eef1f5;color:#4e5969;font-weight:500;text-align:left;padding:0 12px;border:1px solid #e2e7ee;white-space:nowrap}
+.nm-transfer-table td{height:40px;padding:0 12px;border:1px solid #e8ecf2;vertical-align:middle;background:#fff;color:#4e5969}
+.nm-transfer-table tr.nm-transfer-dir-row td{font-weight:500;color:#28344a}
+.nm-transfer-table tr.nm-transfer-dir-row.depth-0 td{font-weight:600}
+.nm-transfer-table tr.nm-transfer-file-row td{font-weight:400;color:#4e5969}
+.nm-transfer-table tr.nm-transfer-file-row:hover td{background:#fafcff}
+.nm-transfer-table tr.nm-transfer-file-row.selected td{background:#f3f8ff}
+.nm-transfer-check-cell{text-align:center!important}
+.nm-transfer-check-cell input[type=checkbox]{width:15px;height:15px;accent-color:#2876ee;cursor:pointer}
+.nm-transfer-all{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-weight:500}
+.nm-transfer-all input{width:15px;height:15px;accent-color:#2876ee;cursor:pointer}
+.nm-transfer-tree-name{display:flex;align-items:center;gap:5px;min-width:0}
+.nm-transfer-tree-name>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-transfer-caret{flex:none;display:inline-flex;align-items:center;justify-content:center;width:18px;height:24px;padding:0;border:0;background:transparent;color:#8a99ad;cursor:pointer}
+.nm-transfer-caret svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.nm-transfer-caret.open svg{transform:rotate(90deg)}
+.nm-transfer-caret-spacer{visibility:hidden}
+.nm-transfer-file-name{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.nm-transfer-source{color:#86909c!important}
+.nm-transfer-form-foot{display:flex;align-items:center;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid #edf0f4}
+.nm-transfer-form-foot .nm-btn{min-width:76px}
+.nm-transfer-detail-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 28px;margin-bottom:4px}
+.nm-transfer-detail-meta .nm-field>span{font-size:13px;color:#526077}
+.nm-transfer-detail-meta .nm-field>input{height:38px}
+.nm-transfer-detail-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:26px 0 14px}
+.nm-transfer-detail-head h3{font-size:14px;font-weight:600;color:#28344a;margin:0}
+.nm-transfer-detail-table{min-width:900px}
+.nm-transfer-detail-table td{height:40px}
+.nm-transfer-detail-table input[type=checkbox]{opacity:1;cursor:default;accent-color:#2876ee}
+.nm-transfer-detail-table input[type=checkbox]:disabled{opacity:1;cursor:default}
+.nm-transfer-detail-return{cursor:pointer;justify-content:center;min-width:76px}
+@media(max-width:1200px){.nm-transfer-detail-meta{grid-template-columns:1fr}}
+@media(max-width:1200px){.nm-transfer-meta{grid-template-columns:repeat(2,minmax(0,1fr))}.nm-archive-split{grid-template-columns:250px minmax(0,1fr)}}
+/* === ASSET_REDESIGN_CSS_END === */
 </style>
 <script id="wrs-project-assets-script">
 /* Project progress and digital assets. Native interactive reconstruction of the local Axure export. */
@@ -6120,6 +6240,7 @@ if(new URLSearchParams(location.search).get('page')==='meeting')showMeeting();
 'use strict';
 if(document.getElementById('nm-project-entry'))return;
 const KEY='wrs-project-assets-v1', clone=o=>JSON.parse(JSON.stringify(o)), $=s=>document.querySelector(s), uid=p=>p+'-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+const STATE_DB='wrs-project-assets-state', STATE_SLOT='current';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const stamp=()=>today()+' '+new Intl.DateTimeFormat('en-GB',{hour12:false,timeZone:'Asia/Shanghai',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date());
@@ -6146,9 +6267,32 @@ function makeTasks(p,s){const result=[];const ranges=[['',''],['2026-08-01','202
  stages.forEach((name,i)=>{const parent='stage-'+i;result.push({id:parent,parent:'',name,level:1,stage:i,owner:p.owner,start:ranges[i][0],end:ranges[i][1],milestone:true,actualStart:i===0?p.applicationTime:i===1?'2026-08-03':i===2?'2026-10-03':'',actualEnd:i===0?p.annualDate:i===1?'2026-10-02':'',documents:[],system:i===0});
  s.standards.filter(t=>t.type===p.type&&t.stage===i).forEach((std,j)=>{let start=ranges[i][0],end=ranges[i][1];result.push({id:uid('task'),parent,name:std.name,level:2,stage:i,owner:p.owner,start,end,milestone:false,actualStart:i<2?(start||p.applicationTime):i===2&&j===0?'2026-10-03':'',actualEnd:i<2?(end||p.annualDate):'',documents:[{id:uid('required'),name:std.name+'成果文件',required:true,file:i<2?{id:uid('evidence'),name:std.name+'成果示例.pdf',sample:true}:null}],standardId:std.id,system:i===0})})});return result}
 let data;try{data=JSON.parse(localStorage.getItem(KEY)||'null')}catch{}if(!data||![1,2].includes(data.schema))data=seed();
+let stateBooting=true,stateDeferred=false,stateDbPromise=null,stateWriteChain=Promise.resolve(),stateDbWarned=false,stateDbBroken=false,stateQuotaWarned=false;
 let module='',view='',project='',search='',filterStatus='',taskLevel='',tree='',standardType='新建',standardStage=1,codeGroup='A标段编码表',tableMode='list',page=1,reportDate='',assetSource='',assetCode='',dateFrom='',dateTo='',draft=null,selected=new Set(),collapsed=new Set(),toastTimer,modalSave=null,returnModal=null;
 const pageSize=10;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch{toast('保存失败，浏览器存储空间不足。请先导出数据。',true);return false}}
+function stateDatabase(){if(!stateDbPromise){stateDbPromise=new Promise(resolve=>{try{if(typeof indexedDB==='undefined'){resolve(null);return}const r=indexedDB.open(STATE_DB,1),timer=setTimeout(()=>resolve(null),4000);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('state'))db.createObjectStore('state')};r.onsuccess=()=>{clearTimeout(timer);resolve(r.result)};r.onerror=()=>{clearTimeout(timer);resolve(null)};r.onblocked=()=>{clearTimeout(timer);resolve(null)}}catch{resolve(null)}})}return stateDbPromise}
+function writeState(json,slot){const savedAt=Date.now();return stateDatabase().then(db=>{if(!db)throw Error('当前浏览器不支持本机数据库');return new Promise((resolve,reject)=>{try{const tx=db.transaction('state','readwrite');tx.objectStore('state').put({json,savedAt},slot||STATE_SLOT);tx.oncomplete=()=>resolve(savedAt);tx.onerror=()=>reject(tx.error||Error('本机数据库写入失败'));tx.onabort=()=>reject(tx.error||Error('本机数据库写入被中止'))}catch(err){reject(err)}})})}
+function readState(slot){return stateDatabase().then(db=>{if(!db)return null;return new Promise(resolve=>{try{const r=db.transaction('state').objectStore('state').get(slot||STATE_SLOT);r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>resolve(null)}catch{resolve(null)}})})}
+function queueStateWrite(json){stateWriteChain=stateWriteChain.then(()=>writeState(json)).catch(err=>{stateDbBroken=true;console.warn('[wrs] 本机数据库保存失败：'+err.message);if(!stateDbWarned){stateDbWarned=true;toast('本机数据库保存失败：'+err.message,true)}});return stateWriteChain}
+function save(){
+  let json;try{json=JSON.stringify(data)}catch(err){toast('数据序列化失败：'+err.message,true);return false}
+  if(stateBooting){stateDeferred=true;return true}
+  let localOk=false;
+  try{localStorage.setItem(KEY,json);localStorage.setItem(KEY+'-saved-at',String(Date.now()));localOk=true}
+  catch(err){if(!stateQuotaWarned){stateQuotaWarned=true;console.warn('[wrs] 浏览器 localStorage 已满，自动改用本机数据库保存：'+err.message);toast('浏览器缓存已满，已自动改用大容量本机数据库保存，数据不会丢失。')}}
+  if(typeof indexedDB!=='undefined'&&!stateDbBroken){queueStateWrite(json);return true}
+  if(!localOk){toast('保存失败，本机存储空间不足。请先导出数据。',true);return false}
+  return true
+}
+function migrateLegacyBackups(){for(const [key,slot] of [[KEY+'-before-r2','backup-before-r2'],[KEY+'-before-manual-progress','backup-before-manual-progress']]){let json='';try{json=localStorage.getItem(key)||''}catch{}if(!json)continue;writeState(json,slot).then(()=>{try{localStorage.removeItem(key)}catch{}}).catch(err=>console.warn('[wrs] 旧备份迁移到本机数据库失败：'+key+' '+err.message))}}
+function restoreState(){
+  let needWrite=false,localSavedAt=0;try{localSavedAt=Number(localStorage.getItem(KEY+'-saved-at')||0)||0}catch{}
+  readState(STATE_SLOT).then(record=>{
+    if(record&&record.json&&record.savedAt>=localSavedAt){
+      try{const parsed=JSON.parse(record.json);if(parsed&&[1,2].includes(parsed.schema)&&Array.isArray(parsed.projects)&&Array.isArray(parsed.directories)){data=parsed;if(module)render()}else needWrite=true}catch(err){console.warn('[wrs] 本机数据库数据解析失败，继续使用浏览器缓存：'+err.message);needWrite=true}
+    }else needWrite=true;
+  }).catch(err=>{console.warn('[wrs] 读取本机数据库失败，继续使用浏览器缓存：'+err.message);needWrite=true}).finally(()=>{stateBooting=false;if(needWrite||stateDeferred)queueStateWrite(JSON.stringify(data));migrateLegacyBackups()});
+}
 function org(){return {role:localStorage.getItem('projectDeclarationRole')||'station',name:localStorage.getItem('projectDeclarationOrg')||'大湾区发射台'}}
 const bureau=()=>org().role==='bureau';
 function syncProjects(){let rows=[];try{rows=JSON.parse(localStorage.getItem('projectDeclarationRecords')||'[]')}catch{};for(const r of rows.filter(r=>r.currentLibrary==='年度项目库'&&r.status==='申报审批通过')){let p=data.projects.find(p=>p.id===r.code);if(!p){p={id:r.code};data.projects.push(p)}Object.assign(p,{name:r.name,station:r.station||'大湾区发射台',type:r.type||'新建',owner:r.owner||r.responsible||'管理员',annualDate:(r.annualDate||'').slice(0,10),applicationTime:(r.applicationTime||r.createdAt||'').slice(0,10),status:r.status,currentLibrary:r.currentLibrary});}}
@@ -6225,7 +6369,7 @@ function filteredAssets(){const ds=tree?descendants(tree):null;return scopeAsset
 function treeMarkup(){return `<div class="nm-tree"><div class="nm-tree-title">文件目录</div><button data-nm-dir="" class="${!tree?'active':''}">全部资料 <small>${scopeAssets().length}</small></button>${orderedDirs().map(d=>`<button style="padding-left:${10+directoryDepth(d)*15}px" data-nm-dir="${esc(d.id)}" class="${tree===d.id?'active':''}">${d.parent?'└ ':''}${esc(d.name)} <small>${scopeAssets().filter(a=>descendants(d.id).has(a.dir)).length}</small></button>`).join('')}</div>`}
 function renderAssets(){const rows=filteredAssets(),pg=paginate(rows),readonly=bureau();return header(!readonly?btn('新增资料','asset-new','',true):'')+`<div class="nm-split">${treeMarkup()}<div class="nm-card"><div class="nm-filter"><label>文件名称 <input id="nm-search" value="${esc(search)}" placeholder="请输入文件名称"></label><label>资产编码 <input id="nm-asset-code" value="${esc(assetCode)}" placeholder="请输入资产编码"></label><label>文件来源 <select id="nm-source"><option value="">全部</option>${opt(sourceNames,assetSource)}</select></label><label>归档状态 <select id="nm-status"><option value="">全部</option>${opt(['待归档','已归档'],filterStatus)}</select></label><label>创建时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('搜索','search')}${btn('重置','reset')}</div><div class="nm-head"><span class="nm-muted">共 ${rows.length} 份资料 · 已选 ${selected.size} 份</span><div class="nm-actions">${btn('批量下载','assets-download')}${!readonly?btn('批量归档','assets-archive'):''}</div></div>${table(['<input type="checkbox" id="nm-select-all" aria-label="选择本页全部资料" '+(pg.list.length&&pg.list.every(a=>selected.has(a.id))?'checked':'')+'>','文件名称 / 资产编码',...(bureau()?['项目名称']:[]),'文件来源','文件大小','类型','归档状态','创建人 / 时间','操作'],pg.list.map(a=>`<tr class="${selected.has(a.id)?'nm-selected':''}"><td><input type="checkbox" data-nm-select="${a.id}" ${selected.has(a.id)?'checked':''} aria-label="选择${esc(a.name)}"></td><td style="min-width:220px">${link(esc(a.name),'asset-preview',a.id)}<small>${esc(a.code)}</small>${a.sample?'<small>演示资料记录</small>':''}</td>${bureau()?`<td>${esc(data.projects.find(p=>p.id===a.project)?.name||'—')}</td>`:''}<td>${esc(a.source)}</td><td>${size(a.bytes)}</td><td>${esc(a.type)}</td><td>${badge(a.archived?'已归档':'待归档')}</td><td>${esc(a.creator)}<small>${esc(a.createdAt)}</small></td><td class="nm-ops">${link('下载','asset-download',a.id)}${!readonly?(a.archived?'':link('归档','asset-archive',a.id))+link('编辑','asset-edit',a.id):''}</td></tr>`),1060)}${pg.footer}<p class="nm-note">实际上传文件保存在本机浏览器；演示记录可查看元数据，下载时提供明确标注的示例说明。归档与移交均单独记录。</p></div></div>`}
 function assetEdit(id){const a=data.assets.find(a=>a.id===id);modal(a?'编辑资料信息':'新增工程资料',`<div class="nm-grid-2">${field('文件名称','name',a?.name||'','text',!!a)}${selectField('归档目录','dir',orderedDirs().map(d=>({id:d.id,name:'　'.repeat(directoryDepth(d))+d.name})),a?.dir||tree||'A101',true)}${selectField('文件来源','source',sourceNames,a?.source||sourceNames[4],true)}${selectField('项目阶段','stage',stages.map((name,i)=>({id:String(i),name})),String(a?.stage??6))}${selectField('关联项目任务','taskId',[{id:'',name:'不关联具体任务'},...tasks().map(t=>({id:t.id,name:wbs(t)+' '+t.name}))],a?.taskId||'')}<label class="nm-field"><span>${a?'替换原文件':'<em>* </em>上传文件'}</span><input type="file" name="file" ${!a?'required':''}></label><label class="nm-field full"><span>资料说明</span><textarea name="desc" rows="3">${esc(a?.desc||'')}</textarea></label></div>`,async fd=>{const f=fd.get('file'),has=f&&f.size;let fileId=a?.fileId;if(has){fileId=uid('blob');await putFile(fileId,f)}const name=fd.get('name')?.trim()||(has?f.name:a?.name);if(!name)throw Error('请选择文件或填写文件名称');const val={name,dir:fd.get('dir'),source:fd.get('source'),stage:Number(fd.get('stage')),taskId:fd.get('taskId'),desc:fd.get('desc'),fileId};if(has)Object.assign(val,{bytes:f.size,type:(f.name.split('.').pop()||'FILE').toUpperCase(),sample:false});if(a){if(a.archived&&(has||a.name!==name))throw Error('已归档资料不能直接替换文件或改名，请新增修订版本');Object.assign(a,val)}else data.assets.push({id:uid('asset'),project,code:project+'-DA-'+String(scopeAssets().length+1).padStart(4,'0')+'-'+Date.now().toString(36).slice(-3),creator:'管理员',createdAt:stamp(),archived:false,...val});persist('资料信息已保存。')},'保存')}
-function renderTransfers(){const list=data.transfers.filter(t=>t.project===project&&(!search||t.target.includes(search))&&(!dateFrom||t.start>=dateFrom)&&(!dateTo||t.end<=dateTo)),pg=paginate(list);return header(btn('新增资产移交','transfer-new','',true))+`<div class="nm-card"><div class="nm-filter"><label>移交对象 <input id="nm-search" value="${esc(search)}" placeholder="请输入移交对象"></label><label>移交时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('查询','search')}${btn('重置','reset')}</div>${table(['序号','移交对象','移交开始','移交截止','计划移交内容','本次移交内容项','创建人','创建时间','操作'],pg.list.map((t,i)=>`<tr><td>${(page-1)*pageSize+i+1}</td><td>${esc(t.target)}</td><td>${t.start}</td><td>${t.end}</td><td>${esc(t.content)}</td><td>${t.items.length} 项</td><td>${esc(t.creator)}</td><td>${t.createdAt}</td><td class="nm-ops">${link('详情','transfer-detail',t.id)}${link('编辑','transfer-edit',t.id)}${link('删除','transfer-delete',t.id,true)}</td></tr>`),1050)}${pg.footer}<p class="nm-note">移交记录保存创建时的文件及目录快照，按资料项统计本次移交数量。</p></div>`}
+function renderTransfers(){const list=data.transfers.filter(t=>t.project===project&&(!search||t.target.includes(search))&&(!dateFrom||t.start>=dateFrom)&&(!dateTo||t.end<=dateTo)),pg=paginate(list);return header(btn('新增资产移交','transfer-new','',true))+`<div class="nm-card"><div class="nm-filter"><label>移交对象 <input id="nm-search" value="${esc(search)}" placeholder="请输入移交对象"></label><label>移交时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('查询','search')}${btn('重置','reset')}</div>${table(['序号','移交对象','移交开始','移交截止','计划移交内容','本次移交内容项','创建人','创建时间','操作'],pg.list.map((t,i)=>`<tr><td>${(page-1)*pageSize+i+1}</td><td>${esc(t.target)}</td><td>${t.start}</td><td>${t.end}</td><td>${esc(t.content)}</td><td>${transferRecordItems(t).length} 项</td><td>${esc(t.creator)}</td><td>${t.createdAt}</td><td class="nm-ops">${link('详情','transfer-detail',t.id)}${link('编辑','transfer-edit',t.id)}${link('删除','transfer-delete',t.id,true)}</td></tr>`),1050)}${pg.footer}<p class="nm-note">移交记录保存创建时的文件及目录快照，按资料项统计本次移交数量。</p></div>`}
 function transferEdit(id){const t=data.transfers.find(t=>t.id===id),archived=scopeAssets().filter(a=>a.archived),initial=new Set(t?.assetIds||[]);modal(t?'编辑资产移交':'新增资产移交',`<div class="nm-grid-2">${field('移交对象','target',t?.target||'','text',true)}${field('计划移交内容','content',t?.content||'','text',true)}${field('移交开始时间','start',t?.start||today(),'date',true)}${field('移交截止时间','end',t?.end||today(),'date',true)}</div><h3>选择本次移交资料</h3><p class="nm-note">仅列出当前项目已归档资料。勾选目录可批量选择，未归档资料需先在资料归档中处理。</p><div class="nm-actions" style="margin:10px 0"><select id="nm-transfer-dir"><option value="">全部目录</option>${opt(orderedDirs().map(d=>({id:d.id,name:d.name})),null)}</select>${btn('选择该目录','transfer-select-dir')}${btn('清空选择','transfer-clear')}</div>${table(['选择','文件目录','文件名称','文件大小','是否首次移交'],archived.map(a=>`<tr><td><input type="checkbox" name="assetIds" value="${a.id}" ${initial.has(a.id)?'checked':''} class="nm-transfer-check"></td><td>${esc(data.directories.find(d=>d.id===a.dir)?.name||'—')}</td><td>${esc(a.name)}</td><td>${size(a.bytes)}</td><td>${data.transfers.some(x=>x.id!==id&&x.project===project&&x.assetIds.includes(a.id))?'否':'是'}</td></tr>`))}<div class="nm-summary">本次移交内容：<b id="nm-transfer-count">${initial.size}</b> 项</div>`,fd=>{if(fd.get('start')>fd.get('end'))throw Error('移交开始不得晚于截止时间');const ids=fd.getAll('assetIds');if(!ids.length)throw Error('请至少选择一份已归档资料');const items=ids.map(assetId=>{const a=data.assets.find(a=>a.id===assetId);return {...clone(a),directoryName:data.directories.find(d=>d.id===a.dir)?.name||'',first:!data.transfers.some(x=>x.id!==id&&x.assetIds.includes(a.id))}});const v={target:fd.get('target').trim(),content:fd.get('content').trim(),start:fd.get('start'),end:fd.get('end'),assetIds:ids,items};if(t)Object.assign(t,v,{updatedAt:stamp()});else data.transfers.push({id:uid('transfer'),project,...v,creator:'管理员',createdAt:stamp()});persist('资产移交记录已保存，可在详情中下载本次移交包。')},'提交')}
 function transferDetail(id){const t=data.transfers.find(t=>t.id===id);modal('资产移交详情',`<div class="nm-grid-2">${field('移交对象','target',t.target,'text',false,true)}${field('计划移交内容','content',t.content,'text',false,true)}${field('开始时间','start',t.start,'date',false,true)}${field('截止时间','end',t.end,'date',false,true)}</div><div class="nm-head"><h3>移交内容详情 · ${t.items.length} 项</h3>${btn('本次移交下载','transfer-download',t.id,true)}</div>${table(['文件目录','文件名称','文件大小','文件类型','是否首次移交','操作'],t.items.map((a,i)=>`<tr><td>${esc(a.directoryName||data.directories.find(d=>d.id===a.dir)?.name||'—')}</td><td>${esc(a.name)}</td><td>${size(a.bytes)}</td><td>${a.type}</td><td>${a.first?'是':'否'}</td><td>${link('下载','transfer-item-download',t.id+'|'+i)}</td></tr>`))}<p class="nm-note">本次移交使用记录内的文件快照；后续原台账改名或新增资料不会改变本次移交范围。</p>`)}
 function renderCodes(){const groups=[...new Set(data.codes.map(c=>c.group))],rows=data.codes.filter(c=>c.group===codeGroup&&(!search||(c.name+c.code).includes(search))),pg=paginate(rows);return header(btn('新增编码','code-new','',true))+`<div class="nm-split"><div class="nm-tree"><div class="nm-tree-title">编码表</div>${groups.map(g=>`<button data-nm-code-group="${g}" class="${codeGroup===g?'active':''}">${g}</button>`).join('')}</div><div class="nm-card"><div class="nm-filter"><label>名称 / 编码 <input id="nm-search" value="${esc(search)}" placeholder="请输入名称或编码"></label>${btn('查询','search')}${btn('重置','reset')}</div>${table(['序号','名称','编码','操作'],pg.list.map((c,i)=>`<tr><td>${i+1+(page-1)*pageSize}</td><td>${esc(c.name)}</td><td>${esc(c.code)}</td><td>${link('编辑','code-edit',c.id)} ${link('删除','code-delete',c.id,true)}</td></tr>`))}${pg.footer}</div></div>`}
@@ -6242,7 +6386,7 @@ function download(blob,name){const url=URL.createObjectURL(blob),a=document.crea
 function csv(rows){return new Blob(['\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'})}
 async function assetPayload(a){if(a.fileId){const blob=await getFile(a.fileId);if(blob)return {name:a.name,blob};throw Error(a.name+'：本机原文件未找到，请重新上传')}return {name:a.name.replace(/\.[^.]+$/,'')+'_演示说明.txt',blob:new Blob(['工程资料演示记录\r\n文件名称：'+a.name+'\r\n资产编码：'+(a.code||'—')+'\r\n说明：本条为演示元数据，未附真实工程文件。请上传真实文件后进行正式预览和下载。'],{type:'text/plain;charset=utf-8'})}}
 async function downloadAsset(a){if(!a)return;const p=await assetPayload(a);download(p.blob,p.name)}
-async function previewAsset(a){if(!a)return;let p;if(!a.fileId){modal('资料详情',`<div class="nm-grid-2">${field('文件名称','name',a.name,'text',false,true)}${field('资产编码','code',a.code||'—','text',false,true)}${field('文件类型','type',a.type||'—','text',false,true)}${field('文件大小','size',size(a.bytes||0),'text',false,true)}</div><p class="nm-note">${esc(a.desc||'本条为演示记录，尚未附真实原文件。可在新增资料中上传文件演示预览。')}</p>${btn('下载演示说明','asset-download',a.id)}`);return}p=await assetPayload(a);const url=URL.createObjectURL(p.blob),type=a.name.split('.').pop().toLowerCase();if(['png','jpg','jpeg','webp','gif'].includes(type))modal('文件预览 · '+a.name,`<img src="${url}" alt="${esc(a.name)}" style="max-width:100%;max-height:500px;display:block;margin:auto">`);else if(type==='pdf')modal('文件预览 · '+a.name,`<iframe class="nm-preview-frame" src="${url}" title="PDF预览"></iframe>`);else if(['txt','csv','json','md','log'].includes(type))modal('文件预览 · '+a.name,`<pre>${esc((await p.blob.text()).slice(0,150000))}</pre>`);else modal('文件详情 · '+a.name,`<p class="nm-note">文件类型 ${esc(a.type)}，请下载后用对应软件查看。</p>${btn('下载原文件','asset-download',a.id)}`);setTimeout(()=>URL.revokeObjectURL(url),120000)}
+async function previewAsset(a){if(!a)return;let p;if(!a.fileId){modal('资料详情',`<div class="nm-grid-2">${field('文件名称','name',a.name,'text',false,true)}${field('资产编码','code',a.code||'—','text',false,true)}${field('文件类型','type',a.type||'—','text',false,true)}${field('文件大小','size',size(a.bytes||0),'text',false,true)}</div><p class="nm-note">${esc(a.desc||'本条为演示记录，尚未附真实原文件；实际文件会随系统功能菜单自动归入对应目录。')}</p>${btn('下载演示说明','asset-download',a.id)}`);return}p=await assetPayload(a);const url=URL.createObjectURL(p.blob),type=a.name.split('.').pop().toLowerCase();if(['png','jpg','jpeg','webp','gif'].includes(type))modal('文件预览 · '+a.name,`<img src="${url}" alt="${esc(a.name)}" style="max-width:100%;max-height:500px;display:block;margin:auto">`);else if(type==='pdf')modal('文件预览 · '+a.name,`<iframe class="nm-preview-frame" src="${url}" title="PDF预览"></iframe>`);else if(['txt','csv','json','md','log'].includes(type))modal('文件预览 · '+a.name,`<pre>${esc((await p.blob.text()).slice(0,150000))}</pre>`);else modal('文件详情 · '+a.name,`<p class="nm-note">文件类型 ${esc(a.type)}，请下载后用对应软件查看。</p>${btn('下载原文件','asset-download',a.id)}`);setTimeout(()=>URL.revokeObjectURL(url),120000)}
 // Store-only ZIP keeps the demo offline and preserves uploaded bytes without a library dependency.
 const crcTable=Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0});
 function crc32(buf){let c=0xffffffff;for(const n of buf)c=crcTable[(c^n)&255]^(c>>>8);return (c^0xffffffff)>>>0}
@@ -7281,8 +7425,349 @@ action=async function(name,id){
 const renderBeforeEmptyStationBanner=render;
 render=function(){if(module==='progress'&&view==='项目进度看板'&&!bureau()&&!dashboardUsesDemo()&&!projects().length){navMarkup();$('#active-tab').textContent=view;pageEl.innerHTML=renderDashboard();disposePlanScrollDock();cancelAnimationFrame(planScrollDockFrame);return}return renderBeforeEmptyStationBanner()};
 
+/* === ASSET_REDESIGN_START === */
+/* Automatic archive, hierarchical directory tree and directory-based transfer packages. */
+let archiveTreeProject='',archiveExpanded=new Set(),archiveLevelLabel='请选择',archiveDirFilter='',archiveLevelMenuOpen=false;
+let transferFormState=null,transferDetailState=null,transferDetailCollapsed=new Set(),transferSelection=new Set(),transferExpanded=new Set();
+let dirPickerPath=[],dirPickerValue='',dirPickerExclude=new Set();
+
+// The new archive model is automatic: every ingested file is archived through its source menu.
+data.assets.forEach(a=>{a.archived=true;if(!a.archivedAt)a.archivedAt=a.createdAt||stamp()});
+
+function assetDir(id){return data.directories.find(d=>d.id===id)}
+function assetDirPath(id){const path=[],seen=new Set();let d=assetDir(id);while(d&&!seen.has(d.id)){seen.add(d.id);path.unshift(d);d=assetDir(d.parent)}return path}
+function assetDirPathNames(id){return assetDirPath(id).map(d=>d.name)}
+function assetDirPathLabel(id){return assetDirPathNames(id).join(' / ')}
+function assetDirChildren(id,exclude){return data.directories.filter(d=>d.parent===(id||'')&&(!exclude||!exclude.has(d.id)))}
+function assetDirHasChildren(id,exclude){return assetDirChildren(id,exclude).length>0}
+function assetSubtreeIds(id){if(!id)return new Set(data.directories.map(d=>d.id));return descendants(id)}
+function assetSourceSet(id){const set=new Set(),ids=assetSubtreeIds(id);for(const d of data.directories)if(ids.has(d.id)&&d.source)set.add(d.source);return set}
+function archiveAssetsFor(id){const assets=scopeAssets();if(!id)return assets;const sources=assetSourceSet(id);if(!sources.size)return[];return assets.filter(a=>sources.has(a.source))}
+function assetLevelLabel(id){const d=assetDir(id);if(!d)return'一级目录';const depth=directoryDepth(d);return depth===0?'一级目录':depth===1?'二级目录':depth===2?'三级目录':depth===3?'四级目录':'五级目录'}
+function assetPrimaryDirId(a){const own=assetDir(a.dir);if(own&&(!own.source||!a.source||own.source===a.source))return own.id;const match=data.directories.find(d=>d.source===a.source);return match?match.id:own?own.id:''}
+
+function archiveInitTree(){if(archiveTreeProject===project)return;archiveTreeProject=project;archiveExpanded=new Set(data.directories.filter(d=>data.directories.some(n=>n.parent===d.id)).map(d=>d.id));archiveLevelLabel='请选择';archiveDirFilter='';archiveLevelMenuOpen=false}
+function archiveVisibleDirIds(){const all=data.directories;if(!archiveDirFilter)return new Set(all.map(d=>d.id));const q=archiveDirFilter.toLowerCase(),keep=new Set(),byId=new Map(all.map(d=>[d.id,d]));for(const d of all){if(!String(d.name||'').toLowerCase().includes(q))continue;let cur=d;while(cur){keep.add(cur.id);cur=byId.get(cur.parent)}for(const n of all)if(descendants(d.id).has(n.id))keep.add(n.id)}return keep}
+function archiveTreeBodyMarkup(){
+ const visible=archiveVisibleDirIds();
+ const count=id=>archiveAssetsFor(id).length;
+ const renderNode=(d,depth)=>{
+  const children=assetDirChildren(d.id).filter(n=>visible.has(n.id)),has=children.length>0,open=has&&(archiveDirFilter?true:archiveExpanded.has(d.id));
+  const caret=has?`<button type="button" class="nm-archive-caret${open?' open':''}" data-nm-act="archive-dir-toggle" data-id="${esc(d.id)}" aria-expanded="${open}" aria-label="${open?'收起':'展开'}${esc(d.name)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button>`:'<span class="nm-archive-caret nm-archive-caret-spacer" aria-hidden="true"></span>';
+  return `<div class="nm-archive-branch"><div class="nm-archive-node${tree===d.id?' active':''}" style="--depth:${depth}">${caret}<button type="button" class="nm-archive-label" data-nm-dir="${esc(d.id)}" title="${esc(assetDirPathLabel(d.id))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h7l3 3h8v12H3Zm0 3h18"/></svg><span>${esc(d.name)}</span></button><span class="nm-archive-count">${count(d.id)}</span></div>${open?`<div class="nm-archive-children">${children.map(n=>renderNode(n,depth+1)).join('')}</div>`:''}</div>`;
+ };
+ const roots=data.directories.filter(d=>!d.parent&&visible.has(d.id));
+ const empty=archiveDirFilter&&!roots.length?`<div class="nm-archive-empty">没有匹配的目录</div>`:'';
+ return `<button type="button" class="nm-archive-all${!tree?' active':''}" data-nm-dir=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h7l3 3h8v12H3Zm0 3h18"/></svg><span>全部资料</span><small>${scopeAssets().length}</small></button>${roots.map(d=>renderNode(d,0)).join('')}${empty}`;
+}
+function archiveTreeMarkup(){
+ archiveInitTree();
+ return `<aside class="nm-tree nm-archive-tree"><div class="nm-archive-tree-head"><div class="nm-tree-title">文件目录</div><div class="nm-archive-level"><button type="button" class="nm-archive-level-trigger" data-nm-act="archive-level-toggle" aria-expanded="${archiveLevelMenuOpen}" aria-haspopup="menu"><span>${esc(archiveLevelLabel)}</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div class="nm-archive-level-menu" role="menu"${archiveLevelMenuOpen?'':' hidden'}>${['全部展开','全部收起','二级目录','三级目录','四级目录','五级目录'].map(label=>`<button type="button" role="menuitem" data-nm-act="archive-level-set" data-id="${label}">${label}</button>`).join('')}</div></div></div><label class="nm-archive-filter"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg><input id="nm-archive-filter" value="${esc(archiveDirFilter)}" placeholder="输入关键字进行过滤" autocomplete="off" aria-label="输入关键字进行过滤"></label><div class="nm-archive-tree-body">${archiveTreeBodyMarkup()}</div></aside>`;
+}
+function archiveFilteredAssets(){
+ const rows=tree?archiveAssetsFor(tree):scopeAssets(),q=search.toLowerCase();
+ return rows.filter(a=>(!q||String(a.name||'').toLowerCase().includes(q))&&(!assetSource||a.source===assetSource)&&(!assetCode||String(a.code||'').includes(assetCode))&&(!dateFrom||String(a.createdAt||'').slice(0,10)>=dateFrom)&&(!dateTo||String(a.createdAt||'').slice(0,10)<=dateTo));
+}
+
+renderAssets=function(){
+ archiveInitTree();
+ if(tree&&!assetDir(tree))tree='';
+ const rows=archiveFilteredAssets(),pg=paginate(rows),checkedAll=pg.list.length>0&&pg.list.every(a=>selected.has(a.id));
+ const head=['<input type="checkbox" id="nm-select-all" aria-label="选择本页全部资料" '+(checkedAll?'checked':'')+'>','文件名称 / 资产编码',...(bureau()?['项目名称']:[]),'文件来源','文件大小','类型','创建人 / 时间'];
+ const body=pg.list.map(a=>`<tr class="${selected.has(a.id)?'nm-selected':''}"><td><input type="checkbox" data-nm-select="${esc(a.id)}" ${selected.has(a.id)?'checked':''} aria-label="选择${esc(a.name)}"></td><td style="min-width:220px">${link(esc(a.name),'asset-preview',a.id)}<small>${esc(a.code)}</small>${a.sample?'<small>演示资料记录</small>':''}</td>${bureau()?`<td>${esc(data.projects.find(p=>p.id===a.project)?.name||'—')}</td>`:''}<td>${esc(a.source||'—')}</td><td>${size(a.bytes)}</td><td>${esc(a.type||'—')}</td><td>${esc(a.creator||'管理员')}<small>${esc(a.createdAt||'')}</small></td></tr>`);
+ return header('')+`<div class="nm-auto-archive-banner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.5v.2"/></svg><span>资料归档为自动归档：目录关联的文件来源（系统功能菜单）下的文件会自动汇总到该目录；同一文件来源可关联多个目录，无需手动归档。</span></div><div class="nm-split nm-archive-split">${archiveTreeMarkup()}<div class="nm-card nm-archive-main"><div class="nm-filter"><label>文件名称 <input id="nm-search" value="${esc(search)}" placeholder="请输入文件名称"></label><label>资产编码 <input id="nm-asset-code" value="${esc(assetCode)}" placeholder="请输入资产编码"></label><label>文件来源 <select id="nm-source"><option value="">全部</option>${opt(sourceNames,assetSource)}</select></label><label>创建时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('搜索','search')}${btn('重置','reset')}</div><div class="nm-head nm-archive-toolbar"><span class="nm-muted">共 ${rows.length} 份资料 · 已选 ${selected.size} 份</span><div class="nm-actions">${btn('批量下载','assets-download')}</div></div>${table(head,body)}<p class="nm-note">资料由系统按文件来源自动归档，无需手动新增或归档；目录仅决定资料在归档视图中的汇总范围，不改变原始文件。</p></div></div>`;
+};
+filteredAssets=archiveFilteredAssets;
+treeMarkup=archiveTreeMarkup;
+
+renderDirectory=function(){
+ const dirs=orderedDirs(),collapsed=assetCollapsedDirectories(),visible=dirs.filter(d=>assetDirectoryIsVisible(d,collapsed));
+ return header(btn('新增一级','dir-new','',true))+`<div class="nm-card"><div class="nm-panel-title"><h2>移交目录清单</h2><div class="nm-actions">${link('全部展开','asset-dir-expand-all')}${link('全部收起','asset-dir-collapse-all')}<span class="nm-muted">共 ${dirs.length} 个目录节点</span></div></div>${table(['移交目录清单','文件来源','资料数量','操作'],visible.map(d=>{const hasChildren=data.directories.some(n=>n.parent===d.id),expanded=!collapsed.has(d.id);return `<tr class="${!d.parent?'nm-stage':''}" data-asset-directory="${esc(d.id)}"><td style="padding-left:${12+directoryDepth(d)*23}px"><span class="nm-asset-directory-name">${hasChildren?`<button type="button" class="nm-link nm-asset-dir-toggle" data-nm-act="asset-dir-toggle" data-id="${esc(d.id)}" aria-expanded="${expanded}" aria-label="${expanded?'收起':'展开'}${esc(d.name)}" title="${expanded?'收起':'展开'}${esc(d.name)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="${expanded?'m4 6 4 4 4-4':'m6 4 4 4-4 4'}"/></svg></button>`:'<span class="nm-asset-dir-spacer"></span>'}${esc(d.name)}</span></td><td>${esc(d.source||'—')}</td><td>${archiveAssetsFor(d.id).length}</td><td class="nm-ops">${link('新增子级','dir-child',d.id)}${link('编辑','dir-edit',d.id)}${link('删除','dir-delete',d.id,true)}</td></tr>`}),1050)}<p class="nm-note">移交目录按工程资料分类维护；目录关联的文件来源下的资料会自动汇总，已创建移交记录引用的目录不能直接删除。</p></div>`;
+};
+
+function dirPickerPathFor(value){
+ if(!value)return[];
+ return assetDirPath(value).map(d=>d.id).filter(id=>!dirPickerExclude.has(id));
+}
+function dirParentOptionMarkup(d){
+ const value=d.id||'',selected=value===dirPickerValue,has=!!value&&assetDirHasChildren(value,dirPickerExclude);
+ return `<div class="nm-tree-select-option${selected?' selected':''}" role="option" aria-selected="${selected}" data-nm-act="dir-parent-select" data-id="${esc(value)}"><span class="nm-radio" aria-hidden="true"></span><span class="nm-option-label" title="${esc(value?assetDirPathLabel(value):'一级目录')}">${esc(d.name)}</span>${has?`<button type="button" class="nm-option-expand" data-nm-act="dir-parent-expand" data-id="${esc(value)}" aria-label="展开${esc(d.name)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button>`:''}</div>`;
+}
+function dirParentColumnsMarkup(){
+ const cols=[];let parent='';
+ const last=dirPickerPath[dirPickerPath.length-1],extra=last&&assetDirChildren(last,dirPickerExclude).length?1:0,count=Math.max(1,dirPickerPath.length+extra);
+ for(let i=0;i<count;i++){
+  const items=parent?assetDirChildren(parent,dirPickerExclude):[{id:'',name:'一级目录'},...assetDirChildren('',dirPickerExclude)];
+  cols.push(`<div class="nm-tree-select-col" role="listbox">${items.map(dirParentOptionMarkup).join('')}</div>`);
+  if(i<dirPickerPath.length)parent=dirPickerPath[i];
+ }
+ return cols.join('');
+}
+function dirParentPickerMarkup(value,exclude){
+ dirPickerExclude=exclude||new Set();dirPickerValue=value||'';dirPickerPath=dirPickerPathFor(dirPickerValue);
+ const label=value?assetDirPathLabel(value):'一级目录';
+ return `<label class="nm-field"><span>父节点名称</span><div class="nm-tree-select"><input type="hidden" name="parent" value="${esc(value||'')}"><button type="button" class="nm-tree-select-trigger" data-nm-act="dir-parent-toggle" aria-haspopup="listbox" aria-expanded="false"><span class="nm-tree-select-value">${esc(label)}</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div class="nm-tree-select-panel" role="listbox" hidden>${dirParentColumnsMarkup()}</div></div><small class="nm-field-tip">可调整层级；当前目录及其下级目录不能作为父节点。</small></label>`;
+}
+
+const modalBeforeAssetRedesign=modal;
+modal=function(...args){dialog.classList.remove('nm-dialog-tree-select');return modalBeforeAssetRedesign(...args)};
+
+dirEdit=function(id,parent=''){
+ const d=assetDir(id),isNew=!d,fixedParent=isNew?(parent||''):(d?.parent||''),exclude=id?descendants(id):new Set(),sourceList=d?.source&&!sourceNames.includes(d.source)?[...sourceNames,d.source]:sourceNames;
+ let parentField;
+ if(isNew){
+  const parentDir=assetDir(fixedParent),parentText=parentDir?parentDir.name:'一级目录',tag=parentDir?`${assetLevelLabel(fixedParent)} · 自动带出，不可修改`:'无父节点';
+  parentField=`<label class="nm-field"><span>父节点名称</span><div class="nm-parent-fixed" title="${esc(parentDir?assetDirPathLabel(fixedParent):'一级目录')}"><span>${esc(parentText)}</span><span class="nm-parent-lock">${esc(tag)}</span></div></label>`;
+ }else{
+  parentField=dirParentPickerMarkup(d?.parent||'',exclude);
+ }
+ modal(d?'编辑移交目录':'新增移交目录',`<div class="nm-grid-2">${field('移交目录名称','name',d?.name||'','text',true)}${parentField}${selectField('文件来源','source',sourceList,d?.source||sourceNames[0])}</div>`,fd=>{
+  const name=(fd.get('name')||'').trim();
+  if(!name)throw Error('请填写移交目录名称');
+  const parentValue=isNew?fixedParent:(fd.get('parent')||'');
+  if(parentValue&&!assetDir(parentValue))throw Error('父节点不存在');
+  if(parentValue&&exclude.has(parentValue))throw Error('父节点不能选择当前目录或其下级目录');
+  if(data.directories.some(x=>x.id!==id&&x.parent===parentValue&&x.name===name))throw Error('同级目录已存在相同名称');
+  const val={name,parent:parentValue,source:fd.get('source')};
+  if(d)Object.assign(d,val);else data.directories.push({id:uid('dir'),...val});
+  persist('移交目录已保存。');
+ },'提交',false);
+ dialog.style.width='min(900px,calc(100vw - 70px))';
+ if(!isNew)dialog.classList.add('nm-dialog-tree-select');
+};
+
+function transferAssets(){return scopeAssets()}
+function transferRecordItems(t){
+ if(!t)return[];
+ if(Array.isArray(t.items)&&t.items.length)return t.items;
+ return (t.assetIds||[]).map(id=>data.assets.find(a=>a.id===id)).filter(Boolean);
+}
+function transferDirAssetIds(dirId){
+ const ids=new Set();
+ for(const a of transferAssets()){const pid=assetPrimaryDirId(a);if(dirId==='__unassigned'){if(!pid||!assetDir(pid))ids.add(a.id)}else if(pid===dirId||descendants(dirId).has(pid))ids.add(a.id)}
+ return ids;
+}
+function transferTreeRowsMarkup(){
+ const groups=new Map(data.directories.map(d=>[d.id,[]])),unassigned=[];
+ for(const a of transferAssets()){const id=assetPrimaryDirId(a);if(id&&groups.has(id))groups.get(id).push(a);else unassigned.push(a)}
+ const fileRow=(a,depth)=>{const on=transferSelection.has(a.id);return `<tr class="nm-transfer-file-row${on?' selected':''}" data-transfer-asset-row="${esc(a.id)}"><td style="padding-left:${18+depth*24}px"><span class="nm-transfer-file-name" title="${esc(a.name)}">${esc(a.name)}</span></td><td>${esc(a.source||'—')}</td><td class="nm-transfer-check-cell"><input type="checkbox" data-transfer-file="${esc(a.id)}" ${on?'checked':''} aria-label="选择${esc(a.name)}"></td><td class="nm-transfer-check-cell"><button type="button" class="nm-link" data-nm-act="transfer-file-download" data-id="${esc(a.id)}">下载</button></td></tr>`};
+ const dirState=ids=>{let done=0;ids.forEach(id=>{if(transferSelection.has(id))done++});return{checked:ids.size>0&&done===ids.size,partial:done>0&&done<ids.size}};
+ const dirRow=(d,depth)=>{
+  const children=data.directories.filter(n=>n.parent===d.id),files=groups.get(d.id)||[],open=transferExpanded.has(d.id),ids=transferDirAssetIds(d.id),state=dirState(ids);
+  const caret=children.length||files.length?`<button type="button" class="nm-transfer-caret${open?' open':''}" data-nm-act="transfer-dir-toggle" data-id="${esc(d.id)}" aria-expanded="${open}" aria-label="${open?'收起':'展开'}${esc(d.name)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button>`:'<span class="nm-transfer-caret nm-transfer-caret-spacer"></span>';
+  return `<tr class="nm-transfer-dir-row${depth===0?' depth-0':''}" data-transfer-dir-row="${esc(d.id)}"><td style="padding-left:${12+depth*24}px"><div class="nm-transfer-tree-name">${caret}<span title="${esc(d.name)}">${esc(d.name)}</span></div></td><td class="nm-transfer-source">-</td><td class="nm-transfer-check-cell"><input type="checkbox" data-transfer-dir="${esc(d.id)}" ${state.checked?'checked':''} ${ids.size?'':'disabled'} aria-label="选择${esc(d.name)}"></td><td></td></tr>${open?children.map(n=>dirRow(n,depth+1)).join('')+files.map(a=>fileRow(a,depth+1)).join(''):''}`;
+ };
+ let html=data.directories.filter(d=>!d.parent).map(d=>dirRow(d,0)).join('');
+ if(unassigned.length){
+  const ids=new Set(unassigned.map(a=>a.id)),state=dirState(ids),open=transferExpanded.has('__unassigned');
+  const caret=`<button type="button" class="nm-transfer-caret${open?' open':''}" data-nm-act="transfer-dir-toggle" data-id="__unassigned" aria-expanded="${open}" aria-label="${open?'收起':'展开'}未关联目录资料"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button>`;
+  html+=`<tr class="nm-transfer-dir-row depth-0"><td style="padding-left:12px"><div class="nm-transfer-tree-name">${caret}<span>未关联目录资料</span></div></td><td class="nm-transfer-source">-</td><td class="nm-transfer-check-cell"><input type="checkbox" data-transfer-dir="__unassigned" ${state.checked?'checked':''} aria-label="选择未关联目录资料"></td><td></td></tr>${open?unassigned.map(a=>fileRow(a,1)).join(''):''}`;
+ }
+ return html;
+}
+function updateTransferSelectionUI(){
+ const table=document.querySelector('#nm-transfer-table');if(!table)return;
+ table.querySelectorAll('[data-transfer-file]').forEach(cb=>{const on=transferSelection.has(cb.dataset.transferFile);cb.checked=on;cb.closest('tr')?.classList.toggle('selected',on)});
+ table.querySelectorAll('[data-transfer-dir]').forEach(cb=>{const ids=transferDirAssetIds(cb.dataset.transferDir);let done=0;ids.forEach(id=>{if(transferSelection.has(id))done++});const all=ids.size>0;cb.disabled=!all;cb.checked=all&&done===ids.size;cb.indeterminate=all&&done>0&&done<ids.size});
+ const checks=[...table.querySelectorAll('[data-transfer-file]')],allBox=document.querySelector('#nm-transfer-all');
+ if(allBox){const done=checks.filter(cb=>cb.checked).length;allBox.checked=checks.length>0&&done===checks.length;allBox.indeterminate=done>0&&done<checks.length}
+ for(const sel of ['#nm-transfer-count','#nm-transfer-count-box']){const node=document.querySelector(sel);if(node)node.textContent=String(transferSelection.size)}
+}
+function refreshTransferTree(){const body=document.querySelector('#nm-transfer-table tbody');if(body)body.innerHTML=transferTreeRowsMarkup();updateTransferSelectionUI()}
+
+function transferDetailTreeRowsMarkup(){
+ const t=data.transfers.find(x=>x.id===transferDetailState?.id);
+ if(!t)return '';
+ const items=transferRecordItems(t),root={path:[],children:new Map(),files:[]};
+ items.forEach((a,index)=>{
+  const path=transferItemPath(a);let node=root;
+  for(const name of path){
+   if(!node.children.has(name))node.children.set(name,{name,path:[...node.path,name],children:new Map(),files:[]});
+   node=node.children.get(name);
+  }
+  node.files.push({a,index});
+ });
+ const fileRow=(node,depth)=>node.files.map(({a,index})=>`<tr class="nm-transfer-file-row"><td style="padding-left:${18+depth*24}px"><span class="nm-transfer-file-name" title="${esc(a.name)}">${esc(a.name)}</span></td><td>${esc(a.source||'—')}</td><td class="nm-transfer-check-cell"><input type="checkbox" checked disabled aria-label="已移交"></td><td class="nm-transfer-check-cell">${link('下载','transfer-item-download',t.id+'|'+index)}</td></tr>`).join('');
+ const renderNode=(node,depth)=>{
+  const children=[...node.children.values()],has=children.length||node.files.length,key=encodeURIComponent(node.path.join('/')),open=!transferDetailCollapsed.has(key);
+  const caret=has?`<button type="button" class="nm-transfer-caret${open?' open':''}" data-nm-act="transfer-detail-toggle" data-id="${key}" aria-expanded="${open}" aria-label="${open?'收起':'展开'}${esc(node.name)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></button>`:'<span class="nm-transfer-caret nm-transfer-caret-spacer"></span>';
+  return `<tr class="nm-transfer-dir-row${depth===0?' depth-0':''}"><td style="padding-left:${12+depth*24}px"><div class="nm-transfer-tree-name">${caret}<span title="${esc(node.name)}">${esc(node.name)}</span></div></td><td class="nm-transfer-source">-</td><td class="nm-transfer-check-cell"><input type="checkbox" checked disabled aria-label="已移交"></td><td></td></tr>${open?children.map(n=>renderNode(n,depth+1)).join('')+fileRow(node,depth+1):''}`;
+ };
+ return [...root.children.values()].map(n=>renderNode(n,0)).join('')||`<tr><td colspan="4" class="nm-empty">暂无移交内容</td></tr>`;
+}
+function renderTransferDetailPage(){
+ const t=data.transfers.find(x=>x.id===transferDetailState.id);
+ if(!t)return '';
+ const items=transferRecordItems(t);
+ return `<div class="nm-transfer-page-head"><span class="nm-transfer-back" role="button" tabindex="0" data-nm-act="transfer-detail-back"><span class="nm-transfer-back-arrow">←</span><span>返回</span></span><span class="nm-transfer-divider"></span><span class="nm-transfer-title">资产移交详情</span></div><div class="nm-asset-transfer-form"><h2 class="nm-transfer-section">基本信息</h2><div class="nm-transfer-meta">${field('移交对象','target',t.target||'','text',false,true)}${field('移交开始时间','start',t.start||'','date',false,true)}${field('移交截止时间','end',t.end||'','date',false,true)}${field('计划移交内容','content',t.content||'','text',false,true)}<div class="nm-field"><span>本次移交内容项</span><div class="nm-transfer-count-box"><b>${items.length}</b><span>项</span><small>记录内已移交</small></div></div></div><div class="nm-transfer-detail-head"><h3>移交内容详情 · ${items.length} 项</h3>${btn('本次移交下载','transfer-download',t.id,true)}</div><div class="nm-table-scroll"><table class="nm-transfer-table nm-transfer-detail-table" id="nm-transfer-detail-table"><colgroup><col style="width:46%"><col style="width:18%"><col style="width:14%"><col style="width:22%"></colgroup><thead><tr><th>移交目录清单</th><th>文件来源</th><th class="nm-transfer-check-cell"><label class="nm-transfer-all"><input type="checkbox" ${items.length?'checked':''} disabled> 是否移交</label></th><th>操作</th></tr></thead><tbody>${transferDetailTreeRowsMarkup()}</tbody></table></div><p class="nm-note">本次移交使用记录内的文件快照；后续原台账改名或新增资料不会改变本次移交范围。</p><div class="nm-transfer-form-foot"><span class="nm-btn nm-transfer-detail-return" role="button" tabindex="0" data-nm-act="transfer-detail-back">返回</span></div></div>`;
+}
+function renderTransferFormPage(){
+ const t=transferFormState.id?data.transfers.find(x=>x.id===transferFormState.id):null;
+ const valid=new Set(transferAssets().map(a=>a.id));for(const id of [...transferSelection])if(!valid.has(id))transferSelection.delete(id);
+ return `<div class="nm-transfer-page-head"><span class="nm-transfer-back" role="button" tabindex="0" data-nm-act="transfer-cancel"><span class="nm-transfer-back-arrow">←</span><span>返回</span></span><span class="nm-transfer-divider"></span><span class="nm-transfer-title">${t?'编辑资产移交':'新增资产移交'}</span></div><div class="nm-asset-transfer-form"><h2 class="nm-transfer-section">基本信息</h2><form id="nm-transfer-form" novalidate><div class="nm-transfer-meta"><label class="nm-field"><span><em>* </em>移交对象</span><input name="target" list="nm-transfer-targets" value="${esc(t?.target||'')}" placeholder="请输入或者选择" required autocomplete="off"><datalist id="nm-transfer-targets">${['项目建设单位档案室','局档案室','台档案室','施工单位','监理单位'].map(v=>`<option value="${esc(v)}"></option>`).join('')}</datalist></label><label class="nm-field"><span><em>* </em>移交开始时间</span><input name="start" type="date" value="${esc(t?.start||'')}" required></label><label class="nm-field"><span><em>* </em>移交截止时间</span><input name="end" type="date" value="${esc(t?.end||'')}" required></label><label class="nm-field"><span><em>* </em>计划移交内容</span><input name="content" value="${esc(t?.content||'')}" placeholder="请输入" required></label><div class="nm-field"><span>本次移交内容项</span><div class="nm-transfer-count-box"><b id="nm-transfer-count-box">${transferSelection.size}</b><span>项</span><small>自动计算下列选择数量</small></div></div></div><div class="nm-transfer-toolbar"><button type="button" class="nm-btn primary" data-nm-act="transfer-form-download">本次移交下载</button><span class="nm-transfer-selected">已选 <b id="nm-transfer-count">${transferSelection.size}</b> 项</span></div><div class="nm-table-scroll"><table class="nm-transfer-table" id="nm-transfer-table"><colgroup><col style="width:46%"><col style="width:18%"><col style="width:14%"><col style="width:22%"></colgroup><thead><tr><th>移交目录清单</th><th>文件来源</th><th class="nm-transfer-check-cell"><label class="nm-transfer-all"><input type="checkbox" id="nm-transfer-all"> 是否移交</label></th><th>操作</th></tr></thead><tbody>${transferTreeRowsMarkup()}</tbody></table></div><div class="nm-transfer-form-foot"><button type="button" class="nm-btn primary" data-nm-act="transfer-submit">提交</button><button type="button" class="nm-btn" data-nm-act="transfer-cancel">取消</button></div></form></div>`;
+}
+function transferItemPath(a){
+ if(Array.isArray(a.dirPath)&&a.dirPath.length){const path=a.dirPath.filter(Boolean);if(path.length)return path}
+ if(a.dir&&assetDir(a.dir))return assetDirPathNames(a.dir);
+ if(a.directoryName)return[a.directoryName];
+ return['未关联目录'];
+}
+function zipSegment(value){return String(value||'').replace(/[\\/:*?"<>|]/g,'_').replace(/^\.+$/,'_').trim()||'未命名'}
+function zipUniqueName(used,dir,name){
+ let candidate=(dir?dir+'/':'')+name,n=2;
+ const slash=candidate.lastIndexOf('/'),dot=candidate.lastIndexOf('.');
+ const base=dot>slash?candidate.slice(0,dot):candidate,ext=dot>slash?candidate.slice(dot):'';
+ while(used.has(candidate)){candidate=base+'('+n+')'+ext;n++}
+ used.add(candidate);return candidate;
+}
+async function bundleTransfer(items,title){
+ if(!items.length)throw Error('请选择需要下载的文件');
+ toast('正在打包 '+items.length+' 份资料…');
+ const entries=[],folders=new Set(),used=new Set(),manifest=[['文件名称','资产编码','目录路径','大小 字节','文件来源']];
+ for(const a of items){
+  const p=await assetPayload(a),path=transferItemPath(a).map(zipSegment).filter(Boolean),dir=path.join('/');
+  if(dir)for(let i=0;i<path.length;i++)folders.add(path.slice(0,i+1).join('/'));
+  const full=zipUniqueName(used,dir,zipSegment(p.name));
+  entries.push({name:full,bytes:new Uint8Array(await p.blob.arrayBuffer())});
+  manifest.push([a.name,a.code||'',dir,a.bytes,a.source||'']);
+ }
+ const folderEntries=[...folders].sort((a,b)=>a.split('/').length-b.split('/').length||a.localeCompare(b,'zh-CN')).map(folder=>({name:folder+'/',bytes:new Uint8Array(0)}));
+ entries.push({name:'移交文件清单.csv',bytes:new Uint8Array(await csv(manifest).arrayBuffer())});
+ download(zip([...folderEntries,...entries]),title+'.zip');
+ toast('移交资料包已生成。');
+}
+async function downloadTransferSelection(){
+ if(!transferFormState)return;
+ const assets=transferAssets().filter(a=>transferSelection.has(a.id));
+ if(!assets.length)throw Error('请至少选择一份需要移交的资料');
+ const target=(document.querySelector('#nm-transfer-form [name=target]')?.value||'').trim();
+ await bundleTransfer(assets,(proj()?.name||'项目')+'_'+(target||'本次移交')+'_移交资料包');
+}
+async function submitTransferForm(){
+ const form=document.querySelector('#nm-transfer-form');
+ if(!form||!form.reportValidity())return;
+ const fd=new FormData(form),target=(fd.get('target')||'').trim(),content=(fd.get('content')||'').trim(),start=fd.get('start'),end=fd.get('end');
+ if(!target)throw Error('请填写移交对象');
+ if(!content)throw Error('请填写计划移交内容');
+ if(!start||!end)throw Error('请选择移交开始和截止时间');
+ if(start>end)throw Error('移交开始不得晚于截止时间');
+ const ids=[...transferSelection].filter(id=>transferAssets().some(a=>a.id===id));
+ if(!ids.length)throw Error('请至少选择一份需要移交的资料');
+ const editingId=transferFormState.id;
+ const items=ids.map(assetId=>{const a=data.assets.find(x=>x.id===assetId),dir=assetDir(assetPrimaryDirId(a));return{...clone(a),directoryName:dir?.name||'',dirPath:dir?assetDirPathNames(dir.id):['未关联目录'],first:!data.transfers.some(x=>x.id!==editingId&&x.project===project&&x.assetIds.includes(assetId))}});
+ const value={target,content,start,end,assetIds:ids,items,dirIds:[...new Set(items.map(a=>a.dir).filter(Boolean))]};
+ if(transferFormState.id){const t=data.transfers.find(x=>x.id===transferFormState.id);if(!t)throw Error('移交记录不存在');Object.assign(t,value,{updatedAt:stamp()})}
+ else data.transfers.push({id:uid('transfer'),project,...value,creator:'管理员',createdAt:stamp()});
+ transferFormState=null;transferSelection.clear();persist('资产移交记录已保存。');
+}
+function openTransferDetail(id){
+ const t=data.transfers.find(x=>x.id===id);
+ if(!t)throw Error('移交记录不存在');
+ transferDetailState={id:t.id};transferDetailCollapsed=new Set();transferFormState=null;transferSelection.clear();closeDialog();render();
+}
+transferDetail=openTransferDetail;
+function openTransferForm(id){
+ const t=id?data.transfers.find(x=>x.id===id):null;
+ if(id&&!t)throw Error('移交记录不存在');
+ transferDetailState=null;
+ transferFormState={id:id||null};
+ transferSelection=new Set(t?.assetIds||[]);
+ if(!transferSelection.size&&t?.items?.length)transferSelection=new Set(t.items.map(i=>i.id).filter(Boolean));
+ transferExpanded=new Set(data.directories.map(d=>d.id));
+ if(transferAssets().some(a=>!assetPrimaryDirId(a)))transferExpanded.add('__unassigned');
+ closeDialog();render();
+}
+transferEdit=openTransferForm;
+
+renderTransfers=function(){
+ if(transferDetailState){
+  if(!data.transfers.some(t=>t.id===transferDetailState.id))transferDetailState=null;
+  else return renderTransferDetailPage();
+ }
+ if(transferFormState){
+  if(transferFormState.id&&!data.transfers.some(t=>t.id===transferFormState.id))transferFormState=null;
+  else{const html=renderTransferFormPage();setTimeout(updateTransferSelectionUI,0);return html}
+ }
+ const list=data.transfers.filter(t=>t.project===project&&(!search||t.target.includes(search))&&(!dateFrom||t.start>=dateFrom)&&(!dateTo||t.end<=dateTo)),pg=paginate(list);
+ return header(btn('新增资产移交','transfer-new','',true))+`<div class="nm-card"><div class="nm-filter"><label>移交对象 <input id="nm-search" value="${esc(search)}" placeholder="请输入移交对象"></label><label>移交时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('查询','search')}${btn('重置','reset')}</div>${table(['序号','移交对象','移交开始','移交截止','计划移交内容','本次移交内容项','创建人','创建时间','操作'],pg.list.map((t,i)=>`<tr><td>${(page-1)*pageSize+i+1}</td><td>${esc(t.target)}</td><td>${t.start}</td><td>${t.end}</td><td>${esc(t.content)}</td><td>${(t.items||t.assetIds||[]).length} 项</td><td>${esc(t.creator)}</td><td>${t.createdAt}</td><td class="nm-ops">${link('详情','transfer-detail',t.id)}${link('编辑','transfer-edit',t.id)}${link('删除','transfer-delete',t.id,true)}</td></tr>`),1050)}${pg.footer}<p class="nm-note">移交记录保存创建时的文件及目录层级快照；下载时按移交目录自动生成多层文件夹的压缩包。</p></div>`;
+};
+
+const renderAssetDashboardBeforeAutoArchive=renderAssetDashboard;
+renderAssetDashboard=function(){data.assets.forEach(a=>{a.archived=true;if(!a.archivedAt)a.archivedAt=a.createdAt||stamp()});return renderAssetDashboardBeforeAutoArchive()};
+
+const openBeforeAssetRedesign=open;
+open=function(m,sub){if(m==='assets'){transferFormState=null;transferDetailState=null;transferSelection.clear()}return openBeforeAssetRedesign(m,sub)};
+nav.addEventListener('click',e=>{if(e.target.closest('[data-nm-view]')){transferFormState=null;transferDetailState=null;transferSelection.clear()}},true);
+const actionBeforeAssetRedesign=action;
+action=async function(name,id){
+ if(name==='asset-project-open'){transferFormState=null;transferDetailState=null;transferSelection.clear();archiveTreeProject=''}else if(name==='asset-ledger-back'){transferFormState=null;transferDetailState=null;transferSelection.clear()}
+ if(name==='dir-parent-toggle'){
+  const panel=dialog.querySelector('.nm-tree-select-panel'),hidden=dialog.querySelector('.nm-tree-select input[name=parent]');
+  if(!panel||!hidden)return;
+  if(panel.hidden){dirPickerValue=hidden.value||'';dirPickerPath=dirPickerPathFor(dirPickerValue);panel.innerHTML=dirParentColumnsMarkup()}
+  panel.hidden=!panel.hidden;
+  dialog.querySelector('.nm-tree-select-trigger')?.setAttribute('aria-expanded',String(!panel.hidden));
+  return;
+ }
+ if(name==='dir-parent-expand'){
+  dirPickerPath=assetDirPath(id).map(d=>d.id).filter(x=>!dirPickerExclude.has(x));
+  const panel=dialog.querySelector('.nm-tree-select-panel');if(panel)panel.innerHTML=dirParentColumnsMarkup();
+  return;
+ }
+ if(name==='dir-parent-select'){
+  const value=id||'',hidden=dialog.querySelector('.nm-tree-select input[name=parent]');if(!hidden)return;
+  hidden.value=value;dirPickerValue=value;
+  const valueEl=dialog.querySelector('.nm-tree-select-value');if(valueEl)valueEl.textContent=value?assetDirPathLabel(value):'一级目录';
+  const panel=dialog.querySelector('.nm-tree-select-panel');if(panel)panel.hidden=true;
+  dialog.querySelector('.nm-tree-select-trigger')?.setAttribute('aria-expanded','false');
+  return;
+ }
+ if(name==='archive-dir-toggle'){if(archiveExpanded.has(id))archiveExpanded.delete(id);else archiveExpanded.add(id);render();return}
+ if(name==='archive-level-toggle'){archiveLevelMenuOpen=!archiveLevelMenuOpen;const menu=document.querySelector('.nm-archive-level-menu');if(menu)menu.hidden=!archiveLevelMenuOpen;document.querySelector('.nm-archive-level-trigger')?.setAttribute('aria-expanded',String(archiveLevelMenuOpen));return}
+ if(name==='archive-level-set'){
+  archiveLevelMenuOpen=false;
+  if(id==='全部展开'){archiveExpanded=new Set(data.directories.filter(d=>data.directories.some(n=>n.parent===d.id)).map(d=>d.id))}
+  else if(id==='全部收起'){archiveExpanded=new Set()}
+  else{const level={'二级目录':2,'三级目录':3,'四级目录':4,'五级目录':5}[id]||2;archiveExpanded=new Set(data.directories.filter(d=>directoryDepth(d)<level-1).map(d=>d.id))}
+  archiveLevelLabel=id;render();return;
+ }
+ if(name==='transfer-detail'){openTransferDetail(id);return}
+ if(name==='transfer-detail-back'){transferDetailState=null;render();return}
+ if(name==='transfer-detail-toggle'){if(transferDetailCollapsed.has(id))transferDetailCollapsed.delete(id);else transferDetailCollapsed.add(id);const body=document.querySelector('#nm-transfer-detail-table tbody');if(body)body.innerHTML=transferDetailTreeRowsMarkup();return}
+ if(name==='transfer-dir-toggle'){if(transferExpanded.has(id))transferExpanded.delete(id);else transferExpanded.add(id);refreshTransferTree();return}
+ if(name==='transfer-form-download'){await downloadTransferSelection();return}
+ if(name==='transfer-submit'){await submitTransferForm();return}
+ if(name==='transfer-cancel'){transferFormState=null;transferDetailState=null;transferSelection.clear();render();return}
+ if(name==='transfer-file-download'){const a=data.assets.find(x=>x.id===id);if(!a)throw Error('资料不存在');await downloadAsset(a);return}
+ if(name==='transfer-download'){const t=data.transfers.find(x=>x.id===id);if(!t)throw Error('移交记录不存在');await bundleTransfer(transferRecordItems(t),(t.target||'资产移交')+'_移交资料包');return}
+ if(name==='transfer-item-download'){const [tid,i]=id.split('|'),t=data.transfers.find(x=>x.id===tid),items=transferRecordItems(t),a=items[Number(i)];if(!a)throw Error('移交资料不存在');await downloadAsset(a);return}
+ if(name==='asset-new')throw Error('资料归档为自动归档，不支持新增资料。');
+ if(name==='asset-archive'||name==='assets-archive')throw Error('资料归档为自动归档，无需手动归档。');
+ return actionBeforeAssetRedesign(name,id);
+};
+
+pageEl.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.id==='nm-transfer-all'){for(const a of transferAssets()){t.checked?transferSelection.add(a.id):transferSelection.delete(a.id)}updateTransferSelectionUI();return}
+ if(t.dataset.transferDir!==undefined){const ids=transferDirAssetIds(t.dataset.transferDir);ids.forEach(id=>{t.checked?transferSelection.add(id):transferSelection.delete(id)});updateTransferSelectionUI();return}
+ if(t.dataset.transferFile!==undefined){t.checked?transferSelection.add(t.dataset.transferFile):transferSelection.delete(t.dataset.transferFile);updateTransferSelectionUI();return}
+});
+pageEl.addEventListener('input',e=>{
+ if(e.target.id==='nm-archive-filter'){archiveDirFilter=e.target.value.trim();const body=document.querySelector('.nm-archive-tree-body');if(body)body.innerHTML=archiveTreeBodyMarkup()}
+});
+pageEl.addEventListener('submit',e=>{if(e.target.id==='nm-transfer-form'){e.preventDefault();action('transfer-submit').catch(err=>toast(err.message,true))}});
+pageEl.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&(e.target.classList?.contains('nm-transfer-back')||e.target.dataset?.nmAct==='transfer-detail-back')){e.preventDefault();e.target.click()}});
+document.addEventListener('click',e=>{
+ if(!e.target.closest('.nm-tree-select'))dialog.querySelectorAll('.nm-tree-select-panel').forEach(p=>{if(!p.hidden){p.hidden=true;p.closest('.nm-tree-select')?.querySelector('.nm-tree-select-trigger')?.setAttribute('aria-expanded','false')}});
+ if(!e.target.closest('.nm-archive-level')&&archiveLevelMenuOpen){archiveLevelMenuOpen=false;const menu=document.querySelector('.nm-archive-level-menu');if(menu)menu.hidden=true;document.querySelector('.nm-archive-level-trigger')?.setAttribute('aria-expanded','false')}
+},true);
+/* === ASSET_REDESIGN_END === */
+
+// Restore the newest local copy from IndexedDB (large quota) and free legacy localStorage backups.
+restoreState();
+
 // Public navigation hook also supports focused local verification without changing existing shell behavior.
-window.wrsProjectAssets={open,refresh:render,version:'2026-10-29-r31',storageKey:KEY,receiveBusinessRecord,refreshBusiness:syncBusiness,declarationStandards,storeDeclarationFile,viewDeclarationFile,downloadDeclarationFile,personalPlanRows,openPersonalPlan,returnToTaskApplication};
+window.wrsProjectAssets={open,refresh:render,version:'2026-10-30-r35',storageKey:KEY,storageMode:'indexeddb',storageInfo:async()=>({mode:'indexeddb',localChars:(localStorage.getItem(KEY)||'').length,localSavedAt:Number(localStorage.getItem(KEY+'-saved-at')||0)||0,stateSavedAt:(await readState(STATE_SLOT))?.savedAt||0}),receiveBusinessRecord,refreshBusiness:syncBusiness,declarationStandards,storeDeclarationFile,viewDeclarationFile,downloadDeclarationFile,personalPlanRows,openPersonalPlan,returnToTaskApplication};
 })();
 
 </script>
