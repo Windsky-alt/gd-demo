@@ -1,0 +1,8 @@
+{
+  "version": "1.9",
+  "date": "2026-11-03",
+  "note": "隐藏BIM管理菜单，局端与台站端同步生效",
+  "source": "0917优化项.html",
+  "htmlFile": "平台演示-V1.9.html",
+  "docx": "需求说明书-V1.9.docx"
+}
