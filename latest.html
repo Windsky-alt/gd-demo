@@ -6386,7 +6386,7 @@ function codeEdit(id){const c=data.codes.find(c=>c.id===id);modal(c?'编辑编�
 function renderLayers(){const list=data.layers.filter(l=>l.project===project&&(!search||(l.name+l.code).includes(search)));return header(btn('新增一级','layer-new','',true))+`<div class="nm-card"><div class="nm-filter"><label>图层树名称 / 空间编码 <input id="nm-search" value="${esc(search)}" placeholder="请输入名称或空间编码"></label>${btn('搜索','search')}${btn('重置','reset')}</div>${table(['图层树名称','空间编码','状态','操作'],list.map(l=>`<tr><td>${l.parent?'└ ':''}${esc(l.name)}</td><td>${esc(l.code)}</td><td>${badge(l.disabled?'禁用':'启用')}</td><td class="nm-ops">${link('新增子级','layer-child',l.id)}${link('空间属性','layer-attr',l.id)}${link('编辑','layer-edit',l.id)}${link('删除','layer-delete',l.id,true)}</td></tr>`))}</div>`}
 function layerEdit(id,parent=''){const l=data.layers.find(l=>l.id===id);modal(l?'编辑图层树':'新增图层树',`<div class="nm-grid-2">${field('图层树名称','name',l?.name||'','text',true)}${field('空间编码','code',l?.code||'','text',true)}${selectField('父节点名称','parent',[{id:'',name:'一级节点'},...data.layers.filter(x=>x.project===project&&x.id!==id&&x.parent!==id).map(x=>({id:x.id,name:x.name}))],l?.parent||parent)}${selectField('是否禁用','disabled',['否','是'],l?.disabled?'是':'否')}</div>`,fd=>{const parentId=fd.get('parent');let at=parentId;const seen=new Set([id]);while(at){if(seen.has(at))throw Error('父节点不能形成循环');seen.add(at);at=data.layers.find(x=>x.id===at)?.parent}if(data.layers.some(x=>x.id!==id&&x.project===project&&x.code===fd.get('code').trim()))throw Error('项目内空间编码不可重复');const v={name:fd.get('name').trim(),code:fd.get('code').trim(),parent:parentId,disabled:fd.get('disabled')==='是'};if(l)Object.assign(l,v);else data.layers.push({id:uid('layer'),project,attributes:{},...v});persist('图层树节点已保存。')},'确定',false)}
 function layerAttributes(id){const l=data.layers.find(l=>l.id===id),a=l.attributes||{};modal('空间属性 · '+l.name,`<div class="nm-grid-2">${field('空间尺寸 m','size',a.size||'')}${field('净高 m','height',a.height||'','number')}${field('墙面材料 / 面积 / 防火等级','wall',a.wall||'')}${field('地面材料 / 面积 / 防火等级','floor',a.floor||'')}${field('天花板材料 / 面积 / 防火等级','ceiling',a.ceiling||'')}</div>`,fd=>{if(fd.get('height')&&Number(fd.get('height'))<=0)throw Error('净高必须大于0');l.attributes=Object.fromEntries(fd.entries());persist('空间属性已保存。')},'保存属性',false)}
-function renderAssetDashboard(){const as=scopeAssets(),archived=as.filter(a=>a.archived),ids=new Set(projects().map(p=>p.id)),ts=data.transfers.filter(t=>ids.has(t.project)&&(!project||t.project===project)),total=as.reduce((s,a)=>s+a.bytes,0),rate=as.length?archived.length/as.length*100:0;const rank=projects().filter(p=>!project||p.id===project).map(p=>[p.name,Number((as.filter(a=>a.project===p.id).reduce((s,a)=>s+a.bytes,0)/1048576).toFixed(1))]).sort((a,b)=>b[1]-a[1]).slice(0,5);return header(btn('查看资产清单','go-assets'))+`<div class="nm-metrics" style="grid-template-columns:repeat(5,minmax(0,1fr))">${[['资产文件总数',as.length,'份'],['已归档文档数',archived.length,'份'],['资产移交数',ts.length,'次'],['归档率',rate.toFixed(1),'%'],['数字资产总量',(total/1073741824).toFixed(2),'GB']].map(([a,b,c])=>`<div class="nm-metric"><span>${a}</span><strong>${b}<small>${c}</small></strong></div>`).join('')}</div><div class="nm-dashboard-grid"><div class="nm-card"><div class="nm-panel-title"><h2>数字资产统计分析</h2><span class="nm-muted">按项目对比归档情况</span></div>${table(['项目名称','已归档数','未归档数','归档率'],projects().filter(p=>!project||p.id===project).map(p=>{const rows=as.filter(a=>a.project===p.id),done=rows.filter(a=>a.archived).length;return `<tr><td>${esc(p.name)}</td><td>${done}</td><td>${rows.length-done}</td><td>${rows.length?(done/rows.length*100).toFixed(1):0}%</td></tr>`}))}</div><div class="nm-card"><div class="nm-panel-title"><h2>归档状态分布</h2></div><div class="nm-donut"><div class="nm-donut-ring" style="background:conic-gradient(#3486ef 0 ${rate}%,#e6edf7 ${rate}% 100%)"><strong>${rate.toFixed(1)}%</strong></div><div class="nm-legend"><div><i style="background:#3486ef"></i>已归档 ${archived.length} 份</div><div><i style="background:#e6edf7"></i>未归档 ${as.length-archived.length} 份</div></div></div></div><div class="nm-card"><div class="nm-panel-title"><h2>资产类型分布</h2></div>${refAssetTypeChart(refAssetTypeItems())}</div><div class="nm-card"><div class="nm-panel-title"><h2>数字资产总量 TOP5</h2><span class="nm-muted">MB</span></div>${bars(rank)}<h2 style="margin-top:30px">资产移交数量统计</h2>${bars(Array.from({length:6},(_,i)=>{const d=new Date(today()+'T00:00:00');d.setMonth(d.getMonth()-5+i);const m=d.toISOString().slice(0,7);return [m,ts.filter(t=>t.start.startsWith(m)).length,'#37bea3']}))}</div></div><p class="nm-note">归档率＝已归档文件数 ÷ 台账文件总数；统计不代表应交工程资料完整率。移交数按移交记录计次，资产总量按文件台账记录的大小求和。</p>`}
+function renderAssetDashboard(){const as=scopeAssets(),archived=as.filter(a=>a.archived),ids=new Set(projects().map(p=>p.id)),ts=data.transfers.filter(t=>ids.has(t.project)&&(!project||t.project===project)),total=as.reduce((s,a)=>s+a.bytes,0),rate=as.length?archived.length/as.length*100:0;const rank=projects().filter(p=>!project||p.id===project).map(p=>[p.name,Number((as.filter(a=>a.project===p.id).reduce((s,a)=>s+a.bytes,0)/1048576).toFixed(1))]).sort((a,b)=>b[1]-a[1]).slice(0,5);return header(btn('查看资产清单','go-assets'))+`<div class="nm-metrics" style="grid-template-columns:repeat(5,minmax(0,1fr))">${[['资产文件总数',as.length,'份'],['已归档文档数',archived.length,'份'],['资产移交数',ts.length,'次'],['归档率',rate.toFixed(1),'%'],['数字资产总量',(total/1073741824).toFixed(2),'GB']].map(([a,b,c])=>`<div class="nm-metric"><span>${a}</span><strong>${b}<small>${c}</small></strong></div>`).join('')}</div><div class="nm-dashboard-grid"><div class="nm-card"><div class="nm-panel-title"><h2>数字资产统计分析</h2><span class="nm-muted">按项目对比归档情况</span></div>${table(['项目名称','已归档数','未归档数','归档率'],projects().filter(p=>!project||p.id===project).map(p=>{const rows=as.filter(a=>a.project===p.id),done=rows.filter(a=>a.archived).length;return `<tr><td>${esc(p.name)}</td><td>${done}</td><td>${rows.length-done}</td><td>${rows.length?(done/rows.length*100).toFixed(1):0}%</td></tr>`}))}</div><div class="nm-card"><div class="nm-panel-title"><h2>档案类别占比</h2></div>${refAssetTypeChart(refAssetCategoryItems())}</div><div class="nm-card"><div class="nm-panel-title"><h2>归档状态分布</h2></div><div class="nm-donut"><div class="nm-donut-ring" style="background:conic-gradient(#3486ef 0 ${rate}%,#e6edf7 ${rate}% 100%)"><strong>${rate.toFixed(1)}%</strong></div><div class="nm-legend"><div><i style="background:#3486ef"></i>已归档 ${archived.length} 份</div><div><i style="background:#e6edf7"></i>未归档 ${as.length-archived.length} 份</div></div></div></div><div class="nm-card"><div class="nm-panel-title"><h2>数字资产总量 TOP5</h2><span class="nm-muted">MB</span></div>${bars(rank)}<h2 style="margin-top:30px">资产移交数量统计</h2>${bars(Array.from({length:6},(_,i)=>{const d=new Date(today()+'T00:00:00');d.setMonth(d.getMonth()-5+i);const m=d.toISOString().slice(0,7);return [m,ts.filter(t=>t.start.startsWith(m)).length,'#37bea3']}))}</div></div><p class="nm-note">归档率＝已归档文件数 ÷ 台账文件总数；统计不代表应交工程资料完整率。移交数按移交记录计次，资产总量按文件台账记录的大小求和。</p>`}
 let dbPromise=null;const memoryFiles=new Map();
 function database(){if(!dbPromise)dbPromise=new Promise(resolve=>{try{const r=indexedDB.open('wrs-project-assets-files',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch{resolve(null)}});return dbPromise}
 async function putFile(id,file){if(file.size>100*1048576)throw Error('演示单个文件请控制在100MB以内');const db=await database();if(!db)throw Error('当前浏览器不能保存文件，请使用普通窗口打开页面后重试');return new Promise((resolve,reject)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(file,id);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(Error('文件保存失败，请检查本机存储空间'))})}
@@ -7809,13 +7809,27 @@ function refAssetTypeItems(rows){
  const counts=Object.fromEntries(names.map(n=>[n,0]));assets.forEach(a=>counts[refAssetFileCategory(a)]++);
  return names.map(name=>[name,counts[name]]);
 }
+function refAssetCategoryItems(rows){
+  const dirs=data.directories||[],short={A:'前期文件',B:'勘察设计',C:'监理文件',D:'施工管理',E:'声像文件',F:'竣工验收'};
+  const rootOf=id=>{let d=dirs.find(x=>x.id===id),guard=0;while(d&&d.parent&&guard++<20)d=dirs.find(x=>x.id===d.parent);return d;};
+  const map=new Map();
+  for(const a of scopeAssets()){const top=rootOf(a.dir);const key=top?top.id:'未归目录';map.set(key,(map.get(key)||0)+1);}
+  const sum=[...map.values()].reduce((x,y)=>x+y,0);
+  if(!sum)return [['暂无数据',0]];
+  const demo=dashboardUsesDemo();
+  const total=demo&&rows?rows.reduce((n,r)=>n+Number(r.archived||0)+Number(r.unarchived||0),0):sum;
+  return [...map.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+    const d=dirs.find(x=>x.id===k),label=d?(short[d.id]?d.id+' '+short[d.id]:d.name):'未归目录';
+    return [label,demo?Math.round(v/sum*total):v];
+  }).filter(x=>x[1]>0);
+}
 function refAssetTypeChart(items){
  const total=items.reduce((n,x)=>n+x[1],0),radius=74,circ=2*Math.PI*radius;let offset=0;
  const arcs=items.map(([name,n],i)=>{const length=total?n/total*circ:0,tip=name+'：'+n+' 项，占比 '+(total?n/total*100:0).toFixed(1)+'%';const arc=n?'<circle tabindex="0" role="img" aria-label="'+esc(tip)+'" cx="100" cy="100" r="74" fill="none" stroke="'+refColors[i%8]+'" stroke-width="24" stroke-dasharray="'+length+' '+(circ-length)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 100 100)"><title>'+esc(tip)+'</title></circle>':'';offset+=length;return arc}).join('');
  return '<div class="ref-donut-wrap" data-asset-type-chart><svg viewBox="0 0 200 200" style="width:190px;max-width:45%;flex-shrink:0" role="img" aria-label="资产类型分布"><circle cx="100" cy="100" r="74" fill="none" stroke="#eaf0f8" stroke-width="24"/>'+arcs+'<text x="100" y="91" text-anchor="middle" fill="#66758c" style="font-size:14px">资产文件</text><text x="100" y="120" text-anchor="middle" fill="#3b5072" style="font-size:28px;font-weight:600">'+total+'</text></svg><div class="ref-legend">'+items.map(([name,n],i)=>{const percent=(total?n/total*100:0).toFixed(1);return '<div tabindex="0" title="'+esc(name+'：'+n+' 项，占比 '+percent+'%')+'"><i style="background:'+refColors[i%8]+'"></i><span>'+name+'</span><b>'+percent+'%</b><em>'+n+'</em></div>'}).join('')+'</div></div>';
 }
 
-function refAssetDashboard(){const rows=refRows(),sum=k=>rows.reduce((s,r)=>s+r[k],0),count=sum('archived')+sum('unarchived'),period=refPeriod==='month'?refMonth:refMonth.slice(0,4),topPeriod=refTopPeriod==='month'?refTopMonth:refTopMonth.slice(0,4),demo=dashboardUsesDemo(),transfers=rows.map((r,i)=>({...r,n:demo?(period===today().slice(0,period.length)?r.transfers:0):r.ts.filter(t=>(t.createdAt||t.start||'').startsWith(period)).length})),rank=rows.map(r=>({...r,rankBytes:demo?r.bytes*(topPeriod===today().slice(0,topPeriod.length)?1:.7):r.as.filter(a=>(a.createdAt||'').slice(0,10)<=topPeriod+(refTopPeriod==='month'?'-31':'-12-31')).reduce((s,a)=>s+(Number(a.bytes)||0),0)})).sort((a,b)=>b.rankBytes-a.rankBytes).slice(0,5),max=Math.max(1,...rank.map(r=>r.rankBytes));return `<div class="nm-head"><h1>数字资产统计</h1>${btn('查看资产清单','go-assets')}</div>${refModes()}<div class="ref-dashboard" data-ref-dashboard="assets">${refKpis([['数字资产总量',(sum('bytes')/1073741824).toFixed(2),'GB'],['资产文件总数',count,'项'],['已归档文档数',sum('archived'),'项'],['归档率',count?(sum('archived')/count*100).toFixed(2):'—','%'],['资产移交数',sum('transfers'),'次']])}<div class="ref-grid ref-wide-left">${refPanel('数字资产统计分析',refChart(rows,[{name:'已归档数',color:'#5682f5',get:r=>r.archived},{name:'未归档数',color:'#d0ddff',get:r=>r.unarchived}],'项',true))}${refPanel('资产类型分布',refAssetTypeChart(refAssetTypeItems(rows)))}${refPanel('资产移交数量统计',`<p class="ref-transfer-total">总移交次数：${transfers.reduce((s,r)=>s+r.n,0)} 次</p>`+refChart(transfers,[{name:'移交次数',color:'#e8a044',get:r=>r.n}],'次'),refPeriodControl())}${refPanel('数字资产总量 TOP5',rank.length?`<div class="ref-rank">${rank.map(r=>`<div title="${esc(r.p.name)}"><span>${esc(r.p.name)}</span><div><i style="width:${r.rankBytes/max*100}%"></i></div><b>${(r.rankBytes/1073741824).toFixed(2)} GB</b></div>`).join('')}</div>`:'<div class="nm-empty">暂无数据</div>',refPeriodControl(true))}</div><p class="nm-note">归档率＝已归档文件数÷文件总数。总量按文件大小求和；移交按记录计次。TOP5 为所选月末／年末前累计文件总量。</p></div>`}
+function refAssetDashboard(){const rows=refRows(),sum=k=>rows.reduce((s,r)=>s+r[k],0),count=sum('archived')+sum('unarchived'),period=refPeriod==='month'?refMonth:refMonth.slice(0,4),topPeriod=refTopPeriod==='month'?refTopMonth:refTopMonth.slice(0,4),demo=dashboardUsesDemo(),transfers=rows.map((r,i)=>({...r,n:demo?(period===today().slice(0,period.length)?r.transfers:0):r.ts.filter(t=>(t.createdAt||t.start||'').startsWith(period)).length})),rank=rows.map(r=>({...r,rankBytes:demo?r.bytes*(topPeriod===today().slice(0,topPeriod.length)?1:.7):r.as.filter(a=>(a.createdAt||'').slice(0,10)<=topPeriod+(refTopPeriod==='month'?'-31':'-12-31')).reduce((s,a)=>s+(Number(a.bytes)||0),0)})).sort((a,b)=>b.rankBytes-a.rankBytes).slice(0,5),max=Math.max(1,...rank.map(r=>r.rankBytes));return `<div class="nm-head"><h1>数字资产统计</h1>${btn('查看资产清单','go-assets')}</div>${refModes()}<div class="ref-dashboard" data-ref-dashboard="assets">${refKpis([['数字资产总量',(sum('bytes')/1073741824).toFixed(2),'GB'],['资产文件总数',count,'项'],['已归档文档数',sum('archived'),'项'],['归档率',count?(sum('archived')/count*100).toFixed(2):'—','%'],['资产移交数',sum('transfers'),'次']])}<div class="ref-grid ref-wide-left">${refPanel('数字资产统计分析',refChart(rows,[{name:'已归档数',color:'#5682f5',get:r=>r.archived},{name:'未归档数',color:'#d0ddff',get:r=>r.unarchived}],'项',true))}${refPanel('档案类别占比',refAssetTypeChart(refAssetCategoryItems(rows)))}${refPanel('资产移交数量统计',`<p class="ref-transfer-total">总移交次数：${transfers.reduce((s,r)=>s+r.n,0)} 次</p>`+refChart(transfers,[{name:'移交次数',color:'#e8a044',get:r=>r.n}],'次'),refPeriodControl())}${refPanel('数字资产总量 TOP5',rank.length?`<div class="ref-rank">${rank.map(r=>`<div title="${esc(r.p.name)}"><span>${esc(r.p.name)}</span><div><i style="width:${r.rankBytes/max*100}%"></i></div><b>${(r.rankBytes/1073741824).toFixed(2)} GB</b></div>`).join('')}</div>`:'<div class="nm-empty">暂无数据</div>',refPeriodControl(true))}</div><p class="nm-note">归档率＝已归档文件数÷文件总数。总量按文件大小求和；移交按记录计次。TOP5 为所选月末／年末前累计文件总量。</p></div>`}
 function refOverview(){const rows=refRows(),completed=rows.filter(r=>r.stage===8),periods=completed.map(r=>{const ts=r.v?.tasks.filter(t=>t.level===2)||[],starts=ts.map(t=>t.actualStart).filter(Boolean).sort(),ends=ts.map(t=>t.actualEnd).filter(Boolean).sort(),planned=ts.map(t=>t.end).filter(Boolean).sort();return {start:starts[0],end:ends.at(-1),planned:planned.at(-1)}}),valid=periods.filter(p=>p.start&&p.end),onTime=periods.filter(p=>p.end&&p.planned&&p.end<=p.planned).length,orders=dashboardUsesDemo()?['待整改','继续整改','已复查','待复查'].map((s,i)=>[s,[13,8,20,16][i]]):['待整改','继续整改','已复查','待复查'].map(s=>[s,(data.supervisionOrders||[]).filter(o=>rows.some(r=>r.p.id===o.project)&&o.status===s&&(!refFrom||o.checkedAt>=refFrom)&&(!refTo||o.checkedAt.slice(0,10)<=refTo)).length]),filtered=rows.filter(r=>(!refStation||r.p.station===refStation)&&(!refType||r.type===refType)),old=renderDashboard(),doc=new DOMParser().parseFromString(old,'text/html'),stage=doc.querySelector('.nm-bureau-dashboard>section')?.outerHTML||'',unsupported=dashboardUsesDemo()?'':'<p class="nm-note">施工进度预警、大事记和工程联系单暂无接入数据源，显示 —。</p>';return `<div class="nm-head"><h1>项目总览</h1><span class="nm-muted">局端 · 截至 ${today()}</span></div>${refModes()}<div class="ref-dashboard" data-ref-dashboard="overview">${refKpis([['项目总数',rows.length,'个'],['在建项目数',rows.filter(r=>r.stage>=0&&r.stage<8).length,'个'],['竣工验收项目数',completed.length,'个'],['项目按时完成率',periods.length?(onTime/periods.length*100).toFixed(1):'—','%'],['平均项目周期',valid.length?(valid.reduce((n,p)=>n+days(p.start,p.end)/30.4375,0)/valid.length).toFixed(1):'—','月']])}${stage}<div class="ref-grid ref-three">${refPanel('项目类型占比',refDonut(['新建','改建','技术改造','扩建','—'].map(t=>[t==='—'?'未填写类型':t,rows.filter(r=>r.type===t).length]).filter(x=>x[1]),'项目类型'))}${refPanel('项目日常监管',refDonut(orders,'整改单'),`<div class="ref-period"><input type="date" data-ref-from value="${refFrom}" aria-label="监管开始日期">至<input type="date" data-ref-to value="${refTo}" aria-label="监管结束日期"></div>`)}${refPanel('项目预警统计',refChart(rows,[{name:'项目进度预警数量',color:'#5682f5',get:r=>r.warnings.length},{name:'施工进度预警数量',color:'#cbdcff',get:r=>r.constructionWarnings}]))}</div><div class="ref-grid">${refPanel('数据资产数量统计',refChart(rows,[{name:'资产文件数量',color:'#587df2',get:r=>r.archived+r.unarchived}]))}${refPanel(refTab==='events'?'项目大事记数量统计':'项目工程联系单数量统计',refChart(rows,[{name:refTab==='events'?'大事记数量':'工程联系单数量',color:'#72acf6',get:r=>refTab==='events'?r.events:r.contacts}]),`<div>${btn('大事记','ref-tab','events',refTab==='events')} ${btn('工程联系单','ref-tab','contacts',refTab==='contacts')}</div>`)}</div>${refPanel('项目列表',table(['序号','项目名称','所属台站','项目类型','当前阶段','总体进度','数字资产数量','工程联系单数量','大事记数量'],filtered.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.p.name)}</td><td>${esc(r.p.station)}</td><td>${esc(r.type)}</td><td>${esc(stages[r.stage]||(r.stage===8?'全部完成':'待编制计划'))}</td><td>${r.rate===null?'—':r.rate.toFixed(1)+'%'}</td><td>${r.archived+r.unarchived}</td><td>${r.contacts??'—'}</td><td>${r.events??'—'}</td></tr>`),1180),`<div class="ref-period"><select data-ref-station aria-label="筛选台站"><option value="">全部台站</option>${opt([...new Set(rows.map(r=>r.p.station))],refStation)}</select><select data-ref-type aria-label="筛选项目类型"><option value="">全部类型</option>${opt([...new Set(rows.map(r=>r.type))],refType)}</select></div>`)}${unsupported}<p class="nm-note">按时完成率＝按期完成项目÷已完成项目；平均周期取已完成项目实际开始至结束天数÷30.4375。无完整起止日期时不计入平均周期。</p></div>`}
 const refAssetBefore=renderAssetDashboard;renderAssetDashboard=function(){return bureau()?refAssetDashboard():refAssetBefore()};
 navNames.overview=['项目总览'];entries.overview=[...document.querySelectorAll('.global-item')].find(e=>e.textContent.trim()==='项目总览');
@@ -7890,6 +7904,109 @@ const assetActionBeforeBureau=action;
 action=async function(name,id){if(name==='go-assets'&&module==='assets'&&bureau()){resetAssetLedger();project='';search='';tree='';selected.clear()}return assetActionBeforeBureau(name,id)};
 
 /* WRS_BUREAU_ASSET_LEDGER_R67_END */
+/* WRS_ARCHIVE_DIRECTORY_R71_BEGIN */
+/* One handover binding per project directory. Local preview adapter; no real archive network. */
+function archiveBindingDirs(t){return t.directoryBindings||t.dirIds||[]}
+function archiveDirContains(root,id){return root===id||descendants(root).has(id)}
+function archiveDirOverlap(a,b){return archiveDirContains(a,b)||archiveDirContains(b,a)}
+function archiveDirOwner(id,pid,exclude){return data.transfers.find(t=>t.project===pid&&t.id!==exclude&&archiveBindingDirs(t).some(root=>archiveDirOverlap(root,id)))}
+function archiveBindingSelection(){return transferFormState?(transferFormState.bindingSelection||=(new Set())):new Set()}
+function archiveBoundAsset(t,a){return a.project===t.project&&archiveBindingDirs(t).some(root=>archiveDirContains(root,assetPrimaryDirId(a)))}
+function archiveBindingSnapshot(a){const d=assetDir(assetPrimaryDirId(a));return {...clone(a),directoryName:d?.name||'',dirPath:d?assetDirPathNames(d.id):['未关联目录']}}
+function archiveMigrateBindings(){
+ let changed=false;const claimed=[];
+ for(const t of data.transfers.slice().sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''))){
+  if(!Array.isArray(t.directoryBindings)&&t.dirIds?.length){
+   t.directoryBindings=[];t.bindingLegacyConflicts=[];
+   for(const id of t.dirIds){if(!assetDir(id))continue;if(claimed.some(x=>x.project===t.project&&archiveDirOverlap(x.dir,id)))t.bindingLegacyConflicts.push(id);else t.directoryBindings.push(id)}
+   t.archiveAutoEnabled=!!t.directoryBindings.length&&!!t.archiveSync?.simulation&&!!t.archiveSync?.batches?.length;t.bindingCreatedAt=t.submittedAt||t.createdAt;changed=true;
+  }
+  for(const dir of t.directoryBindings||[])claimed.push({project:t.project,dir});
+ }
+ if(changed)save();return changed;
+}
+function archiveBindingSyncSelection(){transferSelection.clear();const roots=archiveBindingSelection();for(const a of scopeAssets())if([...roots].some(root=>archiveDirContains(root,assetPrimaryDirId(a))))transferSelection.add(a.id)}
+// Retain files in the tree for context, including already-bound folders. Selection is directory-only.
+transferAssets=function(){return scopeAssets()};
+const bindingTreeBefore=transferTreeRowsMarkup;
+transferTreeRowsMarkup=function(){return bindingTreeBefore()};
+const bindingUpdateBefore=updateTransferSelectionUI;
+updateTransferSelectionUI=function(){
+ if(!transferFormState)return bindingUpdateBefore();
+ archiveBindingSyncSelection();bindingUpdateBefore();
+ const roots=archiveBindingSelection();
+ document.querySelectorAll('#nm-transfer-table [data-transfer-dir]').forEach(cb=>{
+  const id=cb.dataset.transferDir,owner=archiveDirOwner(id,project,transferFormState.id);
+  cb.disabled=!!owner||id==='__unassigned';cb.checked=[...roots].some(root=>archiveDirContains(root,id));
+  cb.indeterminate=!cb.checked&&[...roots].some(root=>archiveDirContains(id,root));
+  cb.title=owner?'已绑定移交记录 '+archiveCode(owner)+'，不可重复选择':id==='__unassigned'?'请先将文件归入目录':'选择目录及全部下级目录';
+  const cell=cb.closest('td');cell?.querySelector('.ar-binding-badge')?.remove();
+  if(owner){const label=document.createElement('small');label.className='ar-binding-badge';label.textContent='已绑定';cell?.append(label)}
+ });
+ document.querySelectorAll('#nm-transfer-table [data-transfer-file]').forEach(cb=>{cb.disabled=true;cb.checked=transferSelection.has(cb.dataset.transferFile);cb.title='随所属目录整体移交'});
+ const count=document.querySelector('.nm-transfer-selected');if(count)count.innerHTML='已选 <b>'+roots.size+'</b> 个目录、<b id="nm-transfer-count">'+transferSelection.size+'</b> 份文件';
+ const box=document.querySelector('#nm-transfer-all');if(box){const available=[...document.querySelectorAll('#nm-transfer-table [data-transfer-dir]:not(:disabled)')];box.checked=available.length>0&&available.every(cb=>cb.checked);box.indeterminate=!box.checked&&roots.size>0}
+};
+document.addEventListener('change',e=>{
+ if(!transferFormState)return;
+ const cb=e.target;if(!cb.matches('#nm-transfer-all,[data-transfer-dir],[data-transfer-file]'))return;
+ e.stopImmediatePropagation();const roots=archiveBindingSelection();
+ if(cb.matches('[data-transfer-file]')){updateTransferSelectionUI();return}
+ const choose=(id,on)=>{if(id==='__unassigned'||archiveDirOwner(id,project,transferFormState.id))return;
+  if(on){if([...roots].some(root=>archiveDirContains(root,id)))return;for(const root of [...roots])if(archiveDirContains(id,root))roots.delete(root);roots.add(id)}
+  else{for(const root of [...roots])if(archiveDirOverlap(id,root))roots.delete(root)}
+ };
+ if(cb.id==='nm-transfer-all'){
+  roots.clear();if(cb.checked){const visit=d=>{if(!archiveDirOwner(d.id,project,transferFormState.id))choose(d.id,true);else for(const child of data.directories.filter(x=>x.parent===d.id))visit(child)};data.directories.filter(d=>!d.parent).forEach(visit)}
+ }else choose(cb.dataset.transferDir,cb.checked);
+ updateTransferSelectionUI();
+},true);
+const bindingFormBefore=renderTransferFormPage;
+renderTransferFormPage=function(){archiveMigrateBindings();const html=bindingFormBefore();return html.replace('勾选目录将包含下级文件。已同步或正在同步的相同文件版本不再列出；提交仅保存移交记录，返回列表后点击“同步”。','一个目录只能建立一条移交关系，包含全部下级目录；已绑定的目录不可重复选择。提交后首次点击“同步”，后续新增文件自动归入原记录并增量同步。')};
+submitTransferForm=async function(){
+ const form=document.querySelector('#nm-transfer-form');if(!form||!form.reportValidity())return;
+ const content=String(new FormData(form).get('content')||'').trim();if(!content)throw Error('请填写移交说明');
+ if(transferFormState.id)throw Error('已提交的目录绑定不可修改，请在原记录查看同步结果');
+ const roots=[...archiveBindingSelection()];if(!roots.length)throw Error('请至少选择一个可移交目录');
+ if(roots.some(id=>!assetDir(id)||archiveDirOwner(id,project)))throw Error('目录已被其他移交记录绑定，请重新选择');
+ const items=data.assets.filter(a=>a.project===project&&roots.some(root=>archiveDirContains(root,assetPrimaryDirId(a)))).map(archiveBindingSnapshot);
+ const at=stamp(),t={id:uid('transfer'),project,target:'档案系统',content,assetIds:items.map(a=>a.id),items,dirIds:roots,directoryBindings:roots,bindingCreatedAt:at,creator:actorName(),createdAt:at,submittedAt:at,updatedAt:at,archiveAutoEnabled:false};
+ t.archiveCode=archiveCode(t);data.transfers.push(t);transferFormState=null;transferSelection.clear();persist('目录已绑定至本移交记录。首次点击“同步”后启用自动增量同步。');
+};
+const bindingBeginBefore=archiveBegin;
+archiveBegin=function(t,outcome){bindingBeginBefore(t,outcome);t.archiveAutoEnabled=true;t.archiveAutoEnabledAt||=stamp();save()};
+function archiveBindingIncrement(){
+ archiveMigrateBindings();
+ let changed=false;
+ for(const t of data.transfers){
+  if(!archiveAllowed(t)||!t.archiveAutoEnabled||!t.directoryBindings?.length||!t.archiveSync?.simulation)continue;
+  const known=new Set(transferRecordItems(t).map(a=>a.id));
+  // Newly created assets only. Revision replacement needs the archive system's separate revision API.
+  const added=data.assets.filter(a=>archiveBoundAsset(t,a)&&!known.has(a.id));if(!added.length)continue;
+  const snapshots=added.map(archiveBindingSnapshot),items=[...transferRecordItems(t),...snapshots];t.items=items;t.assetIds=items.map(a=>a.id);
+  const grouped=new Map();for(const a of snapshots){const key=a.dirPath.join(' / ');if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(a)}
+  for(const [directory,files] of grouped){
+   const number=t.archiveSync.batches.length+1,batch={directory,batchNo:'DEMO-JJ-'+String(t.id).replace(/[^a-zA-Z0-9]/g,'').slice(-30)+'-INC-'+number,assetIds:files.map(a=>a.id),versionKeys:files.map(archiveVersion),sourceIds:files.map(a=>'DEMO-'+a.id),status:'RECEIVED',entryCount:0,receiptId:'DEMO-R-'+String(t.id).slice(-9)+'-INC-'+number,attempts:1,nextAt:Date.now()+900,fail:false,checkedAt:stamp(),incremental:true,message:'自动增量同步已接收（演示）'};
+   t.archiveSync.batches.push(batch);
+  }
+  delete t.archiveSync.completedAt;t.updatedAt=stamp();archiveHistory(t,'自动增量同步：检测到绑定目录新增 '+snapshots.length+' 份文件，已加入原移交记录（演示）');changed=true;
+ }
+ if(changed){save();if(module==='assets'&&view==='资产移交'&&!assetLedger&&!transferFormState&&!document.querySelector('#nm-dialog[open]')){const top=pageEl.scrollTop;render();pageEl.scrollTop=top}}
+ return changed;
+}
+setInterval(archiveBindingIncrement,1500);
+const bindingSummaryBefore=archiveSummary;
+archiveSummary=function(t){const roots=archiveBindingDirs(t),label=roots.map(id=>assetDir(id)?.name||id).join('、');return '<section class="ar-binding-summary"><b>绑定目录：</b>'+esc(label||'历史记录未关联目录')+'<p>自动增量同步：'+(t.archiveAutoEnabled?'已启用（演示）':'首次点击同步后启用')+'；绑定范围包含下级目录。新增文件在原移交记录中追加批次，已成功批次不重复处理。</p>'+(t.bindingLegacyConflicts?.length?'<p>历史重复目录已归属最早的移交记录，增量同步在最早记录中继续；本记录的原有文件和同步结果保留。</p>':'')+'</section>'+bindingSummaryBefore(t)};
+const bindingDetailBefore=renderTransferDetailPage;
+renderTransferDetailPage=function(){return bindingDetailBefore().replace('本次移交使用记录内的文件快照；后续原台账改名或新增资料不会改变本次移交范围。','目录绑定持续有效。后续新增文件自动追加到本记录并增量同步，各批次保留提交时的文件快照和处理结果。')};
+const bindingListBefore=renderTransfers;
+renderTransfers=function(){const html=bindingListBefore();if(transferFormState||transferDetailState)return html;
+ const doc=new DOMParser().parseFromString(html,'text/html');for(const row of doc.querySelectorAll('[data-archive-transfer]')){const t=data.transfers.find(x=>x.id===row.dataset.archiveTransfer);if(t&&archiveBindingDirs(t).length){row.querySelectorAll('[data-nm-act="transfer-edit"],[data-nm-act="transfer-delete"]').forEach(x=>x.remove());const label=document.createElement('small');label.textContent='目录已绑定 · '+(t.archiveAutoEnabled?'自动增量已启用':'首次同步后启用增量');row.cells[3]?.append(label)}}return doc.body.innerHTML};
+const bindingActionBefore=action;
+action=async function(name,id){if(['transfer-edit','transfer-delete'].includes(name)){const t=archiveRecord(id);if(archiveBindingDirs(t).length)throw Error('目录已经绑定本移交记录，不可重复新建或解除绑定；请在原记录同步或重试')}return bindingActionBefore(name,id)};
+const bindingStyle=document.createElement('style');bindingStyle.textContent='.ar-binding-badge{display:block;color:#9aa5b3;font-size:11px;margin-top:3px}.ar-binding-summary{margin:16px 0;padding:14px;background:#f5f8fe;border:1px solid #dce6f5;border-radius:4px;color:#526783;font-size:13px;line-height:1.8}.ar-binding-summary p{margin:6px 0 0;font-size:12px}';document.head.appendChild(bindingStyle);
+
+/* WRS_ARCHIVE_DIRECTORY_R71_END */
 // Public navigation hook also supports focused local verification without changing existing shell behavior.
 /* WRS_OVERVIEW_ASSET_DEMO_R64 */
 function ensureOverviewAssetDemoR64(){
@@ -9108,6 +9225,8 @@ button.ov-barlabel:hover{background:#eaf1ff}
 .ov-time-row .ov-barlabel{margin-left:0}
 .ov-plan-right .ov-gtrack{position:relative}
 .ov-time-head .ov-gtrack{display:block;height:100%}
+.ref-grid.ref-assets-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.ref-grid.ref-assets-2>:first-child{grid-column:1/-1}
 </style>
 <script>(()=>{
 'use strict';
