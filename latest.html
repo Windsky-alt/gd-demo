@@ -6324,8 +6324,8 @@ const pageEl=document.createElement('section');pageEl.className='page hidden nm-
 const dialog=document.createElement('dialog');dialog.className='nm-dialog';dialog.id='nm-dialog';document.body.append(dialog);
 const nav=document.createElement('aside');nav.className='module-nav hidden';nav.id='nm-nav';$('.workspace').before(nav);
 const entries={};for(const [m,label,icon] of [['progress','项目进度管理','i-clock'],['assets','数字资产管理','i-db']]){let e=document.createElement('button');e.className='global-item';e.id='nm-'+(m==='progress'?'project':'asset')+'-entry';e.title=label;e.innerHTML=`<svg><use href="#${icon}"></use></svg><span>${m==='progress'?'项目进度':'数字资产'}<br>管理</span>`;$('.global-nav-list').append(e);e.addEventListener('click',()=>open(m));entries[m]=e}
-function navMarkup(){const list=module==='assets'&&bureau()?['数字资产统计','数字资产清单']:navNames[module];nav.innerHTML=list.map((n,i)=>`<button type="button" class="module-item ${n===view?'active':''}" data-nm-view="${n}"><svg><use href="#${module==='progress'?'i-clock':i<3?'i-folder':'i-grid'}"></use></svg><span>${n}</span></button>`).join('');}
-function open(m,sub){module=m;const list=m==='assets'&&bureau()?['数字资产统计','数字资产清单']:navNames[m];view=sub&&list.includes(sub)?sub:list[0];project=m==='assets'&&bureau()?'':projects()[0]?.id||'';search='';tree='';selected.clear();page=1;activate();render()}
+function navMarkup(){const list=module==='assets'&&bureau()?['数字资产统计','数字资产清单','移交清单','资料归档','资产移交','任务编码库','图层树配置']:navNames[module];nav.innerHTML=list.map((n,i)=>`<button type="button" class="module-item ${n===view?'active':''}" data-nm-view="${n}"><svg><use href="#${module==='progress'?'i-clock':i<3?'i-folder':'i-grid'}"></use></svg><span>${n}</span></button>`).join('');}
+function open(m,sub){module=m;const list=m==='assets'&&bureau()?['数字资产统计','数字资产清单','移交清单','资料归档','资产移交','任务编码库','图层树配置']:navNames[m];view=sub&&list.includes(sub)?sub:list[0];project=m==='assets'&&bureau()&&['数字资产统计','数字资产清单'].includes(view)?'':projects()[0]?.id||'';search='';tree='';selected.clear();page=1;activate();render()}
 function activate(){document.querySelectorAll('.module-nav').forEach(n=>n.classList.toggle('hidden',n!==nav));document.querySelectorAll('.page-wrap>.page').forEach(p=>p.classList.toggle('hidden',p!==pageEl));document.querySelectorAll('.global-item').forEach(e=>e.classList.toggle('active',e===entries[module]));$('#brand-module').textContent=module==='progress'?'项目进度管理':'数字资产管理';$('#tabs').innerHTML=`<button class="tab">工作台</button><button class="tab">${module==='progress'?'项目进度管理':'数字资产管理'}</button><button class="tab active" id="active-tab">${esc(view)}</button>`;navMarkup()}
 function hide(){pageEl.classList.add('hidden');nav.classList.add('hidden');Object.values(entries).forEach(e=>e.classList.remove('active'));closeDialog();module=''}
 document.addEventListener('click',e=>{const global=e.target.closest('.global-item');if(global&&!Object.values(entries).includes(global)&&module)hide()},true);
@@ -8032,6 +8032,11 @@ pageEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='nm-arch
 const archiveFilesStyle=document.createElement('style');archiveFilesStyle.textContent='.nm-archive-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 0 6px}.nm-archive-pagination .nm-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.nm-archive-pagination label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.nm-archive-pagination select{height:32px;padding:0 8px;border:1px solid #dce3ef;border-radius:4px;background:#fff;color:#526783}.nm-archive-pagination input{width:55px;height:32px;padding:0 7px;border:1px solid #dce3ef;border-radius:4px;color:#526783}.nm-archive-pagination .nm-btn{min-width:32px;padding:6px 10px}.nm-archive-pagination button:disabled{opacity:.45;cursor:not-allowed}';document.head.appendChild(archiveFilesStyle);
 
 /* WRS_ARCHIVE_FILES_R75_END */
+
+/* WRS_BUREAU_FUNCTIONS_R76 */
+const bureauAssetActionBefore=action;
+action=async function(name,id){if(module==='assets'&&name.startsWith('layer-')&&['layer-new','layer-child','layer-edit','layer-attrs'].includes(name)&&!projects().some(p=>p.id===project))throw Error('请先选择一个项目');return bureauAssetActionBefore(name,id)};
+
 // Public navigation hook also supports focused local verification without changing existing shell behavior.
 /* WRS_OVERVIEW_ASSET_DEMO_R64 */
 function ensureOverviewAssetDemoR64(){
@@ -8355,6 +8360,13 @@ function drop(id){return new Promise((res,rej)=>{const tx=db.transaction('nodes'
 /* ---------- 数据 ---------- */
 const projects=()=>window.wrsProjectAssets?.permitProjects?.()||[];
 const project=()=>projects().find(p=>p.id===pid);
+function permitCanWrite(){
+ const p=project();if(!p)return false;if(!bureau())return true;
+ const record=(()=>{try{return JSON.parse(localStorage.getItem('projectDeclarationRecords')||'[]').find(r=>(r.code||r.id)===p.id)||{}}catch{return {}}})();
+ const station=String(p.station||record.station||'').trim();
+ return /^(JG|JGX)/i.test(p.id)||['局管项目','局属机关','局机关','局本级','国家广播电视总局无线电台管理局'].includes(station)||[p.managementType,p.projectLevel,record.managementType,record.projectLevel].includes('局管项目');
+}
+
 const nodesOf=(p=pid)=>rows.filter(r=>r.project===p);
 const versionsOf=(p=pid)=>versionsRows.filter(v=>v.project===p);
 const bySeq=(a,b)=>(a.seq||0)-(b.seq||0);
@@ -8510,8 +8522,8 @@ function renderList(){
       <div class="pm-empty-state">
         <h3>暂无许可证计划</h3>
         <p>许可证台账在编制计划前为空。</p>
-        <p class="pm-muted">${bureau()?'请由台站在“许可证计划编制”中建立事项与计划时间，编制完成后再填报进度。':'请点击下方按钮编制许可证事项，支持按父子层级拆分，编制完成后再按节点填报进度。'}</p>
-        ${bureau()?'':button('许可证计划编制','plan-start','',true)}
+        <p class="pm-muted">${!permitCanWrite()?'该项目由所属台站维护许可证计划，局端可查看计划及进度。':'请点击下方按钮编制许可证事项，支持按父子层级拆分，编制完成后再按节点填报进度。'}</p>
+        ${!permitCanWrite()?'':button('许可证计划编制','plan-start','',true)}
       </div></div>`;
     return;
   }
@@ -8530,7 +8542,7 @@ function renderList(){
       <td>${esc(n.owner||'—')}</td>
       <td>${parent?'<span class="pm-muted">—</span>':stateBadge(n)}</td>
       <td>${n.actualStart||'—'}</td><td>${n.actualEnd||'—'}</td>
-      <td class="pm-ops">${parent?'<span class="pm-muted">—</span>':(bureau()?link('详情','detail',n.id):link('进度填报','fill',n.id)+link('编辑','edit',n.id))}</td></tr>`;
+      <td class="pm-ops">${parent?'<span class="pm-muted">—</span>':(!permitCanWrite()?link('详情','detail',n.id):link('进度填报','fill',n.id)+link('编辑','edit',n.id))}</td></tr>`;
   }).join('');
   page.innerHTML=`<div class="pm-card">${head}
     <div class="pm-filter">
@@ -8539,8 +8551,8 @@ function renderList(){
       ${button('⌕ 搜索','search','',true)}${button('重置','reset')}
     </div>
     <div class="pm-toolbar"><div class="pm-stats"><span>计划事项<b>${all.length}</b></span><span>已完成<b>${done}</b></span><span>进行中<b>${doing}</b></span><span>逾期<b>${lateN}</b></span>${versionsOf().length?`<span>当前版本<b>V${Math.max(...versionsOf().map(v=>v.version))}</b></span>`:''}</div>
-      <span>${button('全部展开','expand-all')}${button('全部收起','collapse-all')}${button('计划列表','versions')}${button('导出','export')}${bureau()?'':button('变更计划','plan-start','',true)}</span></div>
-    ${table(['节点号'+(bureau()?'':addFirstBtn()),'事项名称','事项等级','计划开始','计划结束','工期（天）','责任人','办理状态','实际开始','实际完成','操作'],body)}
+      <span>${button('全部展开','expand-all')}${button('全部收起','collapse-all')}${button('计划列表','versions')}${button('导出','export')}${!permitCanWrite()?'':button('变更计划','plan-start','',true)}</span></div>
+    ${table(['节点号'+(!permitCanWrite()?'':addFirstBtn()),'事项名称','事项等级','计划开始','计划结束','工期（天）','责任人','办理状态','实际开始','实际完成','操作'],body)}
     <p class="pm-hint">进度填报仅在事项的最末级进行；上级事项的进度由其下级事项汇总体现。${all.some(n=>n.demo)?' 当前为大湾区发射台示例数据，可变更计划或填报进度。':''}</p></div>`;
 }
 
@@ -8563,7 +8575,7 @@ function renderPlan(){
   page.innerHTML=`<div class="pm-card">
     ${title((hasPlan?'许可证计划变更':'许可证计划编制')+' · '+(project()?.name||''),'plan-cancel')}
     <div class="pm-toolbar"><span class="pm-muted">共 ${plan.length} 个事项${plan.length?'，其中最末级事项 '+leaves+' 个可填报进度':'，点击节点号旁的“＋”新增一级事项'}</span></div>
-    ${table(['节点号'+(bureau()?'':addFirstBtn()),'事项名称','事项等级','责任人','计划开始日期','计划结束日期','工期（天）'],body)}
+    ${table(['节点号'+(!permitCanWrite()?'':addFirstBtn()),'事项名称','事项等级','责任人','计划开始日期','计划结束日期','工期（天）'],body)}
     <p class="pm-hint">在表格内直接填写：节点号旁“＋”新增下级事项、“−”删除该事项；子级计划开始不得早于上级、计划结束不得晚于上级；工期按起止日期自动计算。保存后进入台账，按最末级事项填报进度。</p>
     <label class="pm-field pm-note"><span>${hasPlan?'变更说明':'编制说明'}${hasPlan?' <b>*</b>':''}</span><textarea id="pm-reason" maxlength="500" placeholder="请输入本次${hasPlan?'变更':'编制'}的原因和主要内容">${esc(planReason)}</textarea></label>
     <p id="pm-error" role="alert"></p>
@@ -8574,7 +8586,7 @@ function renderPlan(){
 function renderFill(mode){
   const n=nodesOf().find(x=>x.id===fillId);
   if(!n){screen='list';return renderList()}
-  if(mode==='detail'||bureau())return renderDetail(n);
+  if(mode==='detail'||!permitCanWrite())return renderDetail(n);
   page.innerHTML=`<form id="pm-fill" class="pm-card pm-form">
     ${title('进度填报 · '+n.name,'list')}
     <h3>事项信息</h3>
@@ -8669,7 +8681,7 @@ function renderVersions(){
       <td class="pm-ops">${link('查看明细','version',v.id)}</td></tr>`).join('');
   page.innerHTML=`<div class="pm-card">${title('计划列表 · '+(project()?.name||''),'list')}
     <div class="pm-toolbar"><span class="pm-muted">共 ${actual.length} 个计划版本${actual.length?'，最新 V'+Math.max(...actual.map(v=>v.version)):''}${example?'；另附 1 条变更示例':''}</span>
-      <span>${bureau()?'':button('变更计划','plan-start','',true)}</span></div>
+      <span>${!permitCanWrite()?'':button('变更计划','plan-start','',true)}</span></div>
     ${table(['版本','类型','编制人','编制时间','变更说明','变更摘要','操作'],body)}
     <p class="pm-hint">每次保存计划生成一个版本；变更版本逐条记录新增、修改、删除的事项，并保留当时的计划快照。</p></div>`;
 }
@@ -8757,6 +8769,7 @@ function changeView(changes,before,after){
   }));
 }
 async function savePlan(){
+  if(!permitCanWrite())return error('当前项目无计划维护权限');
   const msg=validatePlan(plan);
   if(msg)return error(msg);
   const before=nodesOf();
@@ -8854,18 +8867,19 @@ page.addEventListener('click',async e=>{
   const a=b.dataset.pm,id=b.dataset.id;
   try{
     if(a==='noop')return;
+    if(['plan-start','plan-save','add-root','add-first','add-inline','del-inline','fill','edit','remove-file'].includes(a)&&!permitCanWrite())return;
     if(a==='project'){if(!projects().some(p=>p.id===id))return;pid=id;await seedDemo();screen='list';query={};collapsed.clear()}
     else if(a==='projects'){screen='projects';pid='';query={}}
     else if(a==='plan'){screen='plan'}
     else if(a==='toggle'){collapsed.has(id)?collapsed.delete(id):collapsed.add(id)}
     else if(a==='expand-all'){collapsed.clear()}
     else if(a==='collapse-all'){const arr=screen==='plan'?plan:nodesOf();for(const n of arr)if(hasKids(n.id,arr))collapsed.add(n.id)}
-    else if(a==='plan-start'){if(bureau())return;planReturn=screen==='versions'?'versions':'list';plan=structuredClone(nodesOf());planReason='';collapsed.clear();query={};screen='plan'}
+    else if(a==='plan-start'){if(!permitCanWrite())return;planReturn=screen==='versions'?'versions':'list';plan=structuredClone(nodesOf());planReason='';collapsed.clear();query={};screen='plan'}
     else if(a==='list'){screen='list';fillId=''}
     else if(a==='plan-cancel'){plan=null;planReason='';screen=planReturn}
     else if(a==='plan-save'){return savePlan()}
     else if(a==='add-root'||a==='add-first'){
-      if(bureau())return;
+      if(!permitCanWrite())return;
       if(screen!=='plan'){
         plan=structuredClone(nodesOf());
         screen='plan';
@@ -8902,7 +8916,7 @@ page.addEventListener('click',async e=>{
     else if(a==='remove-file'){
       if(screen!=='fill')return;
       const n=nodesOf().find(x=>x.id===fillId);
-      if(!n||bureau())return;
+      if(!n||!permitCanWrite())return;
       n.file=null;await put(n);rows=rows.map(r=>r.id===n.id?n:r);
       $('#pm-files').innerHTML=fileTable(n,true);$('#pm-error').textContent='';
       return;
@@ -8990,7 +9004,7 @@ page.addEventListener('input',e=>{
 page.addEventListener('submit',async e=>{
   if(e.target.id==='pm-fill'){
     e.preventDefault();
-    if(bureau())return;
+    if(!permitCanWrite())return;
     const n=nodesOf().find(x=>x.id===fillId);
     if(!n)return;
     const f=e.target,get=k=>String(new FormData(f).get(k)||'').trim();
