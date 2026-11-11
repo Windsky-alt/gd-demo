@@ -7900,6 +7900,13 @@ const assetActionBeforeBureau=action;
 action=async function(name,id){if(name==='go-assets'&&module==='assets'&&bureau()){resetAssetLedger();project='';search='';tree='';selected.clear()}return assetActionBeforeBureau(name,id)};
 
 /* WRS_BUREAU_ASSET_LEDGER_R67_END */
+
+/* WRS_REMOVE_PROJECT_CYCLE_R72 */
+entries.progress?.remove();
+navNames.progress=[];
+const openBeforeCycleRemoval=open;
+open=function(m,sub){if(m==='progress'){window.wrsOverview?.open('dashboard');return}return openBeforeCycleRemoval(m,sub)};
+
 /* WRS_ARCHIVE_DIRECTORY_R71_BEGIN */
 /* One handover binding per project directory. Local preview adapter; no real archive network. */
 function archiveBindingDirs(t){return t.directoryBindings||t.dirIds||[]}
@@ -7935,11 +7942,11 @@ updateTransferSelectionUI=function(){
   const id=cb.dataset.transferDir,owner=archiveDirOwner(id,project,transferFormState.id);
   cb.disabled=!!owner||id==='__unassigned';cb.checked=[...roots].some(root=>archiveDirContains(root,id));
   cb.indeterminate=!cb.checked&&[...roots].some(root=>archiveDirContains(id,root));
-  cb.title=owner?'已绑定移交记录 '+archiveCode(owner)+'，不可重复选择':id==='__unassigned'?'请先将文件归入目录':'选择目录及全部下级目录';
+  cb.title=owner?'此目录已建立移交关系，不可重复选择':id==='__unassigned'?'请先将文件归入目录':'选择目录及全部下级目录';
   const cell=cb.closest('td');cell?.querySelector('.ar-binding-badge')?.remove();
-  if(owner){const label=document.createElement('small');label.className='ar-binding-badge';label.textContent='已绑定';cell?.append(label)}
+  cb.closest('tr')?.classList.toggle('ar-directory-disabled',!!owner);
  });
- document.querySelectorAll('#nm-transfer-table [data-transfer-file]').forEach(cb=>{cb.disabled=true;cb.checked=transferSelection.has(cb.dataset.transferFile);cb.title='随所属目录整体移交'});
+ document.querySelectorAll('#nm-transfer-table [data-transfer-file]').forEach(cb=>{cb.disabled=true;cb.checked=transferSelection.has(cb.dataset.transferFile);cb.title='随所属目录整体移交';const a=data.assets.find(a=>a.id===cb.dataset.transferFile);cb.closest('tr')?.classList.toggle('ar-directory-disabled',!!a&&!!archiveDirOwner(assetPrimaryDirId(a),project,transferFormState.id))});
  const count=document.querySelector('.nm-transfer-selected');if(count)count.innerHTML='已选 <b>'+roots.size+'</b> 个目录、<b id="nm-transfer-count">'+transferSelection.size+'</b> 份文件';
  const box=document.querySelector('#nm-transfer-all');if(box){const available=[...document.querySelectorAll('#nm-transfer-table [data-transfer-dir]:not(:disabled)')];box.checked=available.length>0&&available.every(cb=>cb.checked);box.indeterminate=!box.checked&&roots.size>0}
 };
@@ -7958,15 +7965,15 @@ document.addEventListener('change',e=>{
  updateTransferSelectionUI();
 },true);
 const bindingFormBefore=renderTransferFormPage;
-renderTransferFormPage=function(){archiveMigrateBindings();const html=bindingFormBefore();return html.replace('勾选目录将包含下级文件。已同步或正在同步的相同文件版本不再列出；提交仅保存移交记录，返回列表后点击“同步”。','一个目录只能建立一条移交关系，包含全部下级目录；已绑定的目录不可重复选择。提交后首次点击“同步”，后续新增文件自动归入原记录并增量同步。')};
+renderTransferFormPage=function(){archiveMigrateBindings();const t=data.transfers.find(t=>t.id===transferFormState?.id);const html=bindingFormBefore();return html.replace('勾选目录将包含下级文件。已同步或正在同步的相同文件版本不再列出；提交仅保存移交记录，返回列表后点击“同步”。','一个目录只能建立一条移交关系，包含全部下级目录；已移交目录不可重复选择。提交后首次点击“同步”，后续新增文件自动归入原记录并增量同步。').replace('<div class="nm-transfer-meta">','<div class="nm-transfer-meta">'+field('计划移交时间','plannedTransferAt',t?.plannedTransferAt||'','date'))};
 submitTransferForm=async function(){
  const form=document.querySelector('#nm-transfer-form');if(!form||!form.reportValidity())return;
- const content=String(new FormData(form).get('content')||'').trim();if(!content)throw Error('请填写移交说明');
+ const fd=new FormData(form),content=String(fd.get('content')||'').trim(),plannedTransferAt=String(fd.get('plannedTransferAt')||'');if(!content)throw Error('请填写移交说明');
  if(transferFormState.id)throw Error('已提交的目录绑定不可修改，请在原记录查看同步结果');
  const roots=[...archiveBindingSelection()];if(!roots.length)throw Error('请至少选择一个可移交目录');
  if(roots.some(id=>!assetDir(id)||archiveDirOwner(id,project)))throw Error('目录已被其他移交记录绑定，请重新选择');
  const items=data.assets.filter(a=>a.project===project&&roots.some(root=>archiveDirContains(root,assetPrimaryDirId(a)))).map(archiveBindingSnapshot);
- const at=stamp(),t={id:uid('transfer'),project,target:'档案系统',content,assetIds:items.map(a=>a.id),items,dirIds:roots,directoryBindings:roots,bindingCreatedAt:at,creator:actorName(),createdAt:at,submittedAt:at,updatedAt:at,archiveAutoEnabled:false};
+ const at=stamp(),t={id:uid('transfer'),project,target:'档案系统',content,plannedTransferAt,assetIds:items.map(a=>a.id),items,dirIds:roots,directoryBindings:roots,bindingCreatedAt:at,creator:actorName(),createdAt:at,submittedAt:at,updatedAt:at,archiveAutoEnabled:false};
  t.archiveCode=archiveCode(t);data.transfers.push(t);transferFormState=null;transferSelection.clear();persist('目录已绑定至本移交记录。首次点击“同步”后启用自动增量同步。');
 };
 const bindingBeginBefore=archiveBegin;
@@ -7994,22 +8001,15 @@ setInterval(archiveBindingIncrement,1500);
 const bindingSummaryBefore=archiveSummary;
 archiveSummary=function(t){const roots=archiveBindingDirs(t),label=roots.map(id=>assetDir(id)?.name||id).join('、');return '<section class="ar-binding-summary"><b>绑定目录：</b>'+esc(label||'历史记录未关联目录')+'<p>自动增量同步：'+(t.archiveAutoEnabled?'已启用（演示）':'首次点击同步后启用')+'；绑定范围包含下级目录。新增文件在原移交记录中追加批次，已成功批次不重复处理。</p>'+(t.bindingLegacyConflicts?.length?'<p>历史重复目录已归属最早的移交记录，增量同步在最早记录中继续；本记录的原有文件和同步结果保留。</p>':'')+'</section>'+bindingSummaryBefore(t)};
 const bindingDetailBefore=renderTransferDetailPage;
-renderTransferDetailPage=function(){return bindingDetailBefore().replace('本次移交使用记录内的文件快照；后续原台账改名或新增资料不会改变本次移交范围。','目录绑定持续有效。后续新增文件自动追加到本记录并增量同步，各批次保留提交时的文件快照和处理结果。')};
+renderTransferDetailPage=function(){const t=archiveRecord(transferDetailState.id);return bindingDetailBefore().replace('<div class="nm-transfer-meta">','<div class="nm-transfer-meta">'+field('计划移交时间','plannedTransferAt',t.plannedTransferAt||'','date',false,true)).replace('本次移交使用记录内的文件快照；后续原台账改名或新增资料不会改变本次移交范围。','目录绑定持续有效。后续新增文件自动追加到本记录并增量同步，各批次保留提交时的文件快照和处理结果。')};
 const bindingListBefore=renderTransfers;
 renderTransfers=function(){const html=bindingListBefore();if(transferFormState||transferDetailState)return html;
- const doc=new DOMParser().parseFromString(html,'text/html');for(const row of doc.querySelectorAll('[data-archive-transfer]')){const t=data.transfers.find(x=>x.id===row.dataset.archiveTransfer);if(t&&archiveBindingDirs(t).length){row.querySelectorAll('[data-nm-act="transfer-edit"],[data-nm-act="transfer-delete"]').forEach(x=>x.remove());const label=document.createElement('small');label.textContent='目录已绑定 · '+(t.archiveAutoEnabled?'自动增量已启用':'首次同步后启用增量');row.cells[3]?.append(label)}}return doc.body.innerHTML};
+ const doc=new DOMParser().parseFromString(html,'text/html'),list=doc.querySelector('.ar-transfer-list .nm-table');if(list){const th=document.createElement('th');th.textContent='计划移交时间';list.tHead?.rows[0]?.insertBefore(th,list.tHead.rows[0].cells[7]);list.style.minWidth='1630px';list.querySelectorAll('td[colspan]').forEach(td=>td.colSpan=11)}for(const row of doc.querySelectorAll('[data-archive-transfer]')){const t=data.transfers.find(x=>x.id===row.dataset.archiveTransfer);const td=document.createElement('td');td.textContent=t?.plannedTransferAt||'—';td.dataset.archivePlanned='';row.insertBefore(td,row.cells[7]);if(t&&archiveBindingDirs(t).length){row.querySelectorAll('[data-nm-act="transfer-edit"],[data-nm-act="transfer-delete"]').forEach(x=>x.remove());const label=document.createElement('small');label.textContent=t.archiveAutoEnabled?'自动增量已启用':'首次同步后启用增量';row.cells[3]?.append(label)}}return doc.body.innerHTML};
 const bindingActionBefore=action;
 action=async function(name,id){if(['transfer-edit','transfer-delete'].includes(name)){const t=archiveRecord(id);if(archiveBindingDirs(t).length)throw Error('目录已经绑定本移交记录，不可重复新建或解除绑定；请在原记录同步或重试')}return bindingActionBefore(name,id)};
-const bindingStyle=document.createElement('style');bindingStyle.textContent='.ar-binding-badge{display:block;color:#9aa5b3;font-size:11px;margin-top:3px}.ar-binding-summary{margin:16px 0;padding:14px;background:#f5f8fe;border:1px solid #dce6f5;border-radius:4px;color:#526783;font-size:13px;line-height:1.8}.ar-binding-summary p{margin:6px 0 0;font-size:12px}';document.head.appendChild(bindingStyle);
+const bindingStyle=document.createElement('style');bindingStyle.textContent='.nm-transfer-table .ar-directory-disabled td{color:#a7afbb;background:#fafbfc}.nm-transfer-table .ar-directory-disabled .nm-transfer-caret{color:#b1bac6}.ar-binding-summary{margin:16px 0;padding:14px;background:#f5f8fe;border:1px solid #dce6f5;border-radius:4px;color:#526783;font-size:13px;line-height:1.8}.ar-binding-summary p{margin:6px 0 0;font-size:12px}';document.head.appendChild(bindingStyle);
 
 /* WRS_ARCHIVE_DIRECTORY_R71_END */
-
-/* WRS_REMOVE_PROJECT_CYCLE_R72 */
-entries.progress?.remove();
-navNames.progress=[];
-const openBeforeCycleRemoval=open;
-open=function(m,sub){if(m==='progress'){window.wrsOverview?.open('dashboard');return}return openBeforeCycleRemoval(m,sub)};
-
 // Public navigation hook also supports focused local verification without changing existing shell behavior.
 /* WRS_OVERVIEW_ASSET_DEMO_R64 */
 function ensureOverviewAssetDemoR64(){
