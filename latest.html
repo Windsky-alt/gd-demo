@@ -7482,7 +7482,7 @@ renderAssets=function(){
  const rows=archiveFilteredAssets(),pg=paginate(rows),checkedAll=pg.list.length>0&&pg.list.every(a=>selected.has(a.id));
  const head=['<input type="checkbox" id="nm-select-all" aria-label="选择本页全部资料" '+(checkedAll?'checked':'')+'>','文件名称 / 资产编码',...(bureau()?['项目名称']:[]),'文件来源','文件大小','类型','创建人 / 时间'];
  const body=pg.list.map(a=>`<tr class="${selected.has(a.id)?'nm-selected':''}"><td><input type="checkbox" data-nm-select="${esc(a.id)}" ${selected.has(a.id)?'checked':''} aria-label="选择${esc(a.name)}"></td><td style="min-width:220px">${link(esc(a.name),'asset-preview',a.id)}<small>${esc(a.code)}</small>${a.sample?'<small>演示资料记录</small>':''}</td>${bureau()?`<td>${esc(data.projects.find(p=>p.id===a.project)?.name||'—')}</td>`:''}<td>${esc(a.source||'—')}</td><td>${size(a.bytes)}</td><td>${esc(a.type||'—')}</td><td>${esc(a.creator||'管理员')}<small>${esc(a.createdAt||'')}</small></td></tr>`);
- return header('')+`<div class="nm-auto-archive-banner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.5v.2"/></svg><span>资料归档为自动归档：目录关联的文件来源（系统功能菜单）下的文件会自动汇总到该目录；同一文件来源可关联多个目录，无需手动归档。</span></div><div class="nm-split nm-archive-split">${archiveTreeMarkup()}<div class="nm-card nm-archive-main"><div class="nm-filter"><label>文件名称 <input id="nm-search" value="${esc(search)}" placeholder="请输入文件名称"></label><label>资产编码 <input id="nm-asset-code" value="${esc(assetCode)}" placeholder="请输入资产编码"></label><label>文件来源 <select id="nm-source"><option value="">全部</option>${opt(sourceNames,assetSource)}</select></label><label>创建时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('搜索','search')}${btn('重置','reset')}</div><div class="nm-head nm-archive-toolbar"><span class="nm-muted">共 ${rows.length} 份资料 · 已选 ${selected.size} 份</span><div class="nm-actions">${btn('批量下载','assets-download')}</div></div>${table(head,body)}<p class="nm-note">资料由系统按文件来源自动归档，无需手动新增或归档；目录仅决定资料在归档视图中的汇总范围，不改变原始文件。</p></div></div>`;
+ return header('')+`<div class="nm-auto-archive-banner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7.5v.2"/></svg><span>资料归档为自动归档：目录关联的文件来源（系统功能菜单）下的文件会自动汇总到该目录；同一文件来源可关联多个目录，无需手动归档。</span></div><div class="nm-split nm-archive-split">${archiveTreeMarkup()}<div class="nm-card nm-archive-main"><div class="nm-filter"><label>文件名称 <input id="nm-search" value="${esc(search)}" placeholder="请输入文件名称"></label><label>资产编码 <input id="nm-asset-code" value="${esc(assetCode)}" placeholder="请输入资产编码"></label><label>文件来源 <select id="nm-source"><option value="">全部</option>${opt(sourceNames,assetSource)}</select></label><label>创建时间 <input type="date" id="nm-date-from" value="${dateFrom}"> 至 <input type="date" id="nm-date-to" value="${dateTo}"></label>${btn('搜索','search')}${btn('重置','reset')}</div><div class="nm-head nm-archive-toolbar"><span class="nm-muted">共 ${rows.length} 份资料 · 已选 ${selected.size} 份</span><div class="nm-actions">${btn('批量下载','assets-download')}</div></div>${table(head,body)}${pg.footer}<p class="nm-note">资料由系统按文件来源自动归档，无需手动新增或归档；目录仅决定资料在归档视图中的汇总范围，不改变原始文件。</p></div></div>`;
 };
 filteredAssets=archiveFilteredAssets;
 treeMarkup=archiveTreeMarkup;
@@ -8010,6 +8010,28 @@ action=async function(name,id){if(['transfer-edit','transfer-delete'].includes(n
 const bindingStyle=document.createElement('style');bindingStyle.textContent='.nm-transfer-table .ar-directory-disabled td{color:#a7afbb;background:#fafbfc}.nm-transfer-table .ar-directory-disabled .nm-transfer-caret{color:#b1bac6}.ar-binding-summary{margin:16px 0;padding:14px;background:#f5f8fe;border:1px solid #dce6f5;border-radius:4px;color:#526783;font-size:13px;line-height:1.8}.ar-binding-summary p{margin:6px 0 0;font-size:12px}';document.head.appendChild(bindingStyle);
 
 /* WRS_ARCHIVE_DIRECTORY_R71_END */
+/* WRS_ARCHIVE_FILES_R75_BEGIN */
+/* Pagination applies only to the file pane, leaving directory and project ledgers intact. */
+let archiveFilesPageSize=10;
+function archiveFilesView(){return module==='assets'&&['资料归档','数字资产清单'].includes(view)&&!!project&&!assetLedger}
+const archiveFilePaginateBefore=paginate;
+paginate=function(rows){
+ if(!archiveFilesView())return archiveFilePaginateBefore(rows);
+ const max=Math.max(1,Math.ceil(rows.length/archiveFilesPageSize));page=Math.max(1,Math.min(page,max));
+ const button=(label,target,disabled=false)=>'<button type="button" class="nm-btn'+(target===page?' primary':'')+'" data-nm-act="archive-files-page" data-id="'+target+'" '+(disabled?'disabled':'')+'>'+label+'</button>';
+ const start=Math.max(1,Math.min(page-2,max-4)),end=Math.min(max,start+4);
+ let numbers='';for(let n=start;n<=end;n++)numbers+=button(n,n);
+ const footer='<div class="nm-pagination nm-archive-pagination"><span>共 '+rows.length+' 份资料</span><div class="nm-actions"><label><select id="nm-archive-page-size" aria-label="每页文件条数">'+[10,20,50].map(n=>'<option value="'+n+'" '+(archiveFilesPageSize===n?'selected':'')+'>'+n+' 条/页</option>').join('')+'</select></label>'+button('上一页',page-1,page===1)+numbers+button('下一页',page+1,page===max)+'<span>'+page+' / '+max+' 页</span><label>前往 <input id="nm-archive-page-jump" aria-label="跳转文件页码" type="number" min="1" max="'+max+'" value="'+page+'"> 页</label>'+btn('跳转','archive-files-jump')+'</div></div>';
+ return {list:rows.slice((page-1)*archiveFilesPageSize,page*archiveFilesPageSize),footer};
+};
+function archiveFilesGoPage(target){const max=Math.max(1,Math.ceil(archiveFilteredAssets().length/archiveFilesPageSize));page=Math.max(1,Math.min(Number.isFinite(target)?Math.trunc(target):1,max));render();pageEl.querySelector('.nm-archive-main')?.scrollIntoView({block:'start',behavior:'instant'})}
+const archiveFilesActionBefore=action;
+action=async function(name,id){if(archiveFilesView()&&name==='archive-files-page'){archiveFilesGoPage(Number(id));return}if(archiveFilesView()&&name==='archive-files-jump'){archiveFilesGoPage(Number(document.querySelector('#nm-archive-page-jump')?.value));return}return archiveFilesActionBefore(name,id)};
+pageEl.addEventListener('change',e=>{if(archiveFilesView()&&e.target.id==='nm-archive-page-size'){const size=Number(e.target.value);if([10,20,50].includes(size)){archiveFilesPageSize=size;archiveFilesGoPage(1)}}});
+pageEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='nm-archive-page-jump'){e.preventDefault();archiveFilesGoPage(Number(e.target.value))}});
+const archiveFilesStyle=document.createElement('style');archiveFilesStyle.textContent='.nm-archive-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 0 6px}.nm-archive-pagination .nm-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.nm-archive-pagination label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.nm-archive-pagination select{height:32px;padding:0 8px;border:1px solid #dce3ef;border-radius:4px;background:#fff;color:#526783}.nm-archive-pagination input{width:55px;height:32px;padding:0 7px;border:1px solid #dce3ef;border-radius:4px;color:#526783}.nm-archive-pagination .nm-btn{min-width:32px;padding:6px 10px}.nm-archive-pagination button:disabled{opacity:.45;cursor:not-allowed}';document.head.appendChild(archiveFilesStyle);
+
+/* WRS_ARCHIVE_FILES_R75_END */
 // Public navigation hook also supports focused local verification without changing existing shell behavior.
 /* WRS_OVERVIEW_ASSET_DEMO_R64 */
 function ensureOverviewAssetDemoR64(){
