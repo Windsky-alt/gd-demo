@@ -8351,7 +8351,7 @@ function renderList(){
   const done=leaf.filter(n=>n.actualEnd).length,doing=leaf.filter(n=>n.actualStart&&!n.actualEnd).length,lateN=leaf.filter(late).length;
   const body=fl.map((n,i)=>{
     const parent=hasKids(n.id,filtered);
-    const caret=parent?`<button type="button" class="pm-caret" data-pm="toggle" data-id="${E(n.id)}">${collapsed.has(n.id)?'▸':'▾'}</button>`:'<span class="pm-caret-ph"></span>';
+    const caret=parent?`<button type="button" class="pm-caret" data-pm="toggle" data-id="${esc(n.id)}">${collapsed.has(n.id)?'▸':'▾'}</button>`:'<span class="pm-caret-ph"></span>';
     return `<tr><td>${wbs.get(n.id)||i+1}</td>
       <td style="min-width:200px"><div class="pm-tree-name" style="padding-left:${(n.level-1)*18}px">${caret}<span>${esc(n.name)}</span></div></td>
       <td>${LEVELS[n.level]||'—'}</td>
