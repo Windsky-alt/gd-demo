@@ -6474,7 +6474,8 @@ function migrateProgress(){
 }
 migrateProgress();
 function sourceBridge(){try{return document.getElementById('lj-frame')?.contentWindow?.wrsDeclarationBridge}catch{return null}}
-function declarationRows(){try{const live=sourceBridge()?.records();if(live?.length)return live;const stored=JSON.parse(localStorage.getItem('projectDeclarationRecords')||'[]');return Array.isArray(stored)?stored:[]}catch{return []}}
+let wrsDeclRowsCache=null,wrsDeclRowsAt=0;function declarationRows(){const now=Date.now();if(wrsDeclRowsCache&&now-wrsDeclRowsAt<600)return wrsDeclRowsCache;try{const live=sourceBridge()?.records();if(live?.length){wrsDeclRowsCache=live;wrsDeclRowsAt=now;return live}const stored=JSON.parse(localStorage.getItem('projectDeclarationRecords')||'[]');wrsDeclRowsCache=Array.isArray(stored)?stored:[];wrsDeclRowsAt=now;return wrsDeclRowsCache}catch{return []}}
+window.addEventListener('focus',()=>{wrsDeclRowsCache=null;wrsDeclRowsAt=0});
 function dateValue(v){const m=String(v||'').match(/(\d{4})[-/年](\d{1,2})[-/月](\d{1,2})/);return m?m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0'):''}
 function personOptions(current){const names=new Set();try{sourceBridge()?.people().forEach(p=>p.name&&names.add(p.name))}catch{}declarationRows().forEach(r=>(r.people||[]).forEach(p=>p.name&&names.add(p.name)));['刘浩东','蒲亮','0729','张明','李华'].forEach(n=>names.add(n));if(current)names.add(current);return [...names]}
 const oldSyncProjects=syncProjects;syncProjects=function(){oldSyncProjects();for(const r of declarationRows().filter(r=>r.currentLibrary==='年度项目库'&&r.status==='申报审批通过')){let p=data.projects.find(p=>p.id===r.code);if(!p){p={id:r.code};data.projects.push(p)}const submitter=r.createdBy||r.submitter||r.applicant||r.people?.find(p=>p.role==='项目负责人')?.name||p.owner||'管理员';Object.assign(p,{name:r.name,station:r.station||'大湾区发射台',type:r.type||p.type||'新建',owner:r.people?.find(p=>p.role==='项目负责人')?.name||p.owner||submitter,submitter,annualDate:dateValue(r.annualDate)||p.annualDate||'',applicationTime:dateValue(r.applicationTime||r.createdAt)||p.applicationTime||'',status:r.status,currentLibrary:r.currentLibrary});}}
@@ -7087,7 +7088,7 @@ pageEl.addEventListener('submit',e=>{
   else if(supervisionScreen==='rectify'){if(bureau()||!existing||!['待整改','继续整改'].includes(existing.status)||!projects().some(p=>p.id===r.project))throw Error('当前不可整改');if(r.actualDate>today()||r.actualDate<r.checkedAt.slice(0,10))throw Error('实际整改日期应在检查日期与今天之间');r.status='待复查';r.history.push({action:'提交整改',actor:actorName(),at:now,note:r.rectificationNote})}
   else if(supervisionScreen==='review'){if(!bureau()||existing?.status!=='待复查')throw Error('当前不可复查');if(r.reviewResult==='不合格'&&!r.reviewNote?.trim())throw Error('请填写不合格原因');r.status=r.reviewResult==='合格'?'已复查':'继续整改';r.reviewedAt=now;r.history.push({action:'复查'+r.reviewResult,actor:actorName(),at:now,note:r.reviewNote})}
   else throw Error('当前页面不可提交');
-  if(existing)Object.assign(existing,clone(r));else data.supervisionOrders.unshift(clone(r));if(!save())throw Error('整改单保存失败');orderReturnWarning=false;supervisionScreen='list';supervisionProject=r.project;open('supervision');supervisionScreen='list';supervisionProject=r.project;render();toast('整改单已保存至项目日常监管。');
+  if(existing)Object.assign(existing,clone(r));else data.supervisionOrders.unshift(clone(r));if(!save())throw Error('整改单保存失败');orderReturnWarning=false;supervisionScreen='list';supervisionProject=r.project;open('supervision');supervisionScreen='list';supervisionProject=r.project;render();toast('整改单已保存至项目日常监管。');if(window.__wrsReturn&&typeof window.wrsReturnToOverview==='function'){setTimeout(()=>window.wrsReturnToOverview(),0)}
  }catch(error){const target=$('#nm-order-error');if(target)target.textContent=error.message}finally{if(button)button.disabled=false}
 });
 
@@ -8084,7 +8085,10 @@ finishOrderBack=function(){
   bindSupPersonalClicks();
   setInterval(bindSupPersonalClicks,900);
 })();
-
+/* 项目总览性能：syncProjects 600ms 内合并，避免每个 projects() 都重解析本地数据 */
+const wrsSyncProjectsBase=syncProjects;
+let wrsSyncAt=0;
+syncProjects=function(){const now=Date.now();if(now-wrsSyncAt<600)return;wrsSyncProjectsBase.apply(this,arguments);wrsSyncAt=now;};
 })();
 
 </script>
@@ -8347,7 +8351,7 @@ function renderList(){
   const done=leaf.filter(n=>n.actualEnd).length,doing=leaf.filter(n=>n.actualStart&&!n.actualEnd).length,lateN=leaf.filter(late).length;
   const body=fl.map((n,i)=>{
     const parent=hasKids(n.id,filtered);
-    const caret=parent?`<button type="button" class="pm-caret" data-pm="toggle" data-id="${esc(n.id)}">${collapsed.has(n.id)?'▸':'▾'}</button>`:'<span class="pm-caret-ph"></span>';
+    const caret=parent?`<button type="button" class="pm-caret" data-pm="toggle" data-id="${E(n.id)}">${collapsed.has(n.id)?'▸':'▾'}</button>`:'<span class="pm-caret-ph"></span>';
     return `<tr><td>${wbs.get(n.id)||i+1}</td>
       <td style="min-width:200px"><div class="pm-tree-name" style="padding-left:${(n.level-1)*18}px">${caret}<span>${esc(n.name)}</span></div></td>
       <td>${LEVELS[n.level]||'—'}</td>
@@ -9005,6 +9009,76 @@ window.wrsProcurement={openProject:async id=>{await open();pid=id;screen='list';
 #ov-page .ov-project-switch{height:72px;margin:0 0 14px;padding:0 18px;border-radius:0;flex-wrap:nowrap;background:linear-gradient(110deg,#eaf3ff 0%,#f6fbff 45%,#d9f8ff 71%,#e9f0ff 100%);border:1px solid #e5edf8}#ov-page .ov-project-switch .mdb-project-main,#ov-page .ov-project-switch .mdb-project-pager{gap:20px;flex-wrap:nowrap}#ov-page .ov-project-switch .mdb-current{color:#fff;background:#2878ef;padding:5px 10px;font-size:12px;white-space:nowrap}#ov-page .ov-project-switch .mdb-project-name{font-size:15px;font-weight:600;color:#202b3b}#ov-page .ov-project-switch .mdb-project-meta{font-size:12px;color:#718096;white-space:nowrap}#ov-page .ov-project-switch .mdb-project-meta b{color:#1478ee;margin-left:4px}#ov-page .ov-project-switch .mdb-project-pager button{height:30px;padding:0 13px;border:1px solid #dce4ef;border-radius:0;background:#fff;color:#53657c}#ov-page .ov-project-switch .mdb-project-pager .current{background:#2878ef;color:#fff;border-color:#2878ef;font-weight:600;padding:5px 9px}.ov-project-picker{position:relative;min-width:180px;max-width:330px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ov-project-picker select{position:absolute!important;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.ov-project-picker:focus-within{outline:1px solid #7095e8}.ov-super-grid{grid-template-columns:minmax(270px,.7fr) minmax(0,1.3fr)}#ov-page .ov-super-grid .ov-scroll table{min-width:0;width:100%;table-layout:fixed}#ov-page .ov-super-grid th,#ov-page .ov-super-grid td{white-space:normal;overflow-wrap:anywhere;padding:10px 8px}#ov-page .ov-super-grid th:first-child{width:42%}#ov-page .ov-super-grid th:nth-child(2){width:26%}#ov-page .ov-super-grid th:last-child{width:10%}.ov-project-chart-scroll{width:100%;overflow-x:scroll}.ov-project-chart-scroll .ov-svg{display:block;max-width:none}.ov-project-chart-scroll .ov-svg text{font-size:12px}.ov-warning-filter+.ov-scroll table{min-width:1300px}#ov-page .ov-warning-filter+.ov-scroll td:first-child{max-width:240px;white-space:normal}.ov-warning-filter+.ov-scroll{max-height:650px}@media(max-width:1250px){#ov-page .ov-project-switch{height:auto;min-height:72px;gap:12px;padding:14px 18px}#ov-page .ov-project-switch .mdb-project-main{gap:12px;flex-wrap:wrap}.ov-super-grid{grid-template-columns:minmax(230px,.6fr) minmax(0,1.4fr)}}
 .ov-metric-detail{font-size:11px;line-height:1.7;white-space:pre-line;color:#7e8fa7;margin-top:8px}
 .ov-double-rings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:center;min-height:300px;padding:10px 6px 20px}.ov-rectify-ring-panel{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}.ov-rectify-ring-panel h4{font-size:14px;color:#536985;margin:0 0 3px;font-weight:500}.ov-rectify-ring-panel .ov-ring{width:145px;height:145px}.ov-rectify-ring-panel .ov-ring>div{width:110px;height:110px}.ov-rectify-ring-panel .ov-ring strong{font-size:25px}.ov-rectify-ring-panel .ov-ring strong small{font-size:12px;margin-left:2px}.ov-rectify-counts{display:flex;flex-direction:column;gap:7px;font-size:12px;color:#8896aa}.ov-rectify-counts i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}.ov-rectify-counts b{color:#4c6385;font-weight:600;margin-left:4px}.ov-rectify-ring-panel>p{font-size:11px;color:#9ba6b8;margin:0}@media(max-width:1200px){.ov-double-rings{gap:12px}.ov-rectify-ring-panel .ov-ring{width:130px;height:130px}.ov-rectify-ring-panel .ov-ring>div{width:98px;height:98px}.ov-rectify-ring-panel .ov-ring strong{font-size:23px}}
+
+.ov-parallel{margin:0 0 26px;background:#f7f9fd;border:1px solid #eaeff8;border-radius:10px;padding:18px 20px 20px}
+.ov-parallel-head{display:flex;align-items:baseline;gap:12px;margin:0 0 14px}
+.ov-parallel-head h4{margin:0;font-size:16px;font-weight:600;color:#1f2d3d}
+.ov-parallel-head span{font-size:12.5px;color:#8a97ab}
+.ov-parallel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.ov-pcard{display:flex;flex-direction:column;gap:16px;text-align:left;padding:20px 22px;background:#fff;border:1px solid #e6ebf5;border-radius:8px;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
+.ov-pcard:hover{border-color:#c7d6f4;box-shadow:0 6px 18px rgba(38,74,140,.09);transform:translateY(-1px)}
+.ov-pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ov-pcard-name{font-size:17px;font-weight:600;color:#1f2d3d;letter-spacing:.2px}
+.ov-pcard-kpis{display:flex;align-items:flex-end;gap:34px}
+.ov-pcard-kpi{display:flex;align-items:baseline;gap:2px;color:#8592a6;font-size:12.5px;white-space:nowrap}
+.ov-pcard-kpi b{font-size:30px;line-height:1;font-weight:600;color:#2f6bd8;font-variant-numeric:tabular-nums}
+.ov-pcard-kpi i{font-size:15px;font-style:normal;color:#98a5ba}
+.ov-pcard-kpi span{margin-left:7px}
+.ov-pcard-kpi.is-warn b{color:#e08a3c}
+.ov-pcard-bar{height:6px;border-radius:3px;background:#eef2fa;overflow:hidden}
+.ov-pcard-bar i{display:block;height:100%;border-radius:3px;background:#5b8def;transition:width .3s}
+.ov-pcard.is-done .ov-pcard-bar i{background:#5d9e75}
+.ov-pcard.is-running .ov-pcard-bar i{background:#f0b25a}
+.ov-pcard-dates{display:grid;gap:7px;font-size:13.5px;color:#455b7d}
+.ov-pcard-dates div{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.ov-pcard-dates span{color:#93a0b4;font-size:12.5px}
+.ov-pcard-dates em{font-style:normal;color:#a3aebe;font-size:12px}
+.ov-pcard-dates b{font-weight:500;font-variant-numeric:tabular-nums}
+@media(max-width:1100px){.ov-parallel-grid{grid-template-columns:1fr}}
+
+/* ---- 里程碑 + 单条甘特 ---- */
+.ov-plan-left{width:58%}
+.ov-plan-left table{width:max(100%,712px)!important}
+.ov-plan-left th,.ov-plan-left td{height:34px!important}
+.ov-plan-left th:nth-child(1){width:56px}
+.ov-plan-left th:nth-child(2),.ov-plan-left th:nth-child(3){width:98px}
+.ov-plan-left th:nth-child(4){width:68px}
+.ov-plan-left th:nth-child(5){width:66px}
+.ov-plan-left th:nth-child(6),.ov-plan-left th:nth-child(7){width:98px}
+.ov-plan-left th:nth-child(8){width:128px}
+.ov-gwrap{position:relative}
+.ov-time-head{height:34px!important;display:flex;align-items:stretch;background:#f1f3f7;z-index:4;overflow:visible!important}
+.ov-time-head span{top:10px}
+.ov-time-head .ov-gtrack{overflow:hidden}
+.ov-gname{position:sticky;left:0;z-index:3;flex:0 0 170px;width:170px;height:100%;display:flex;align-items:center;box-sizing:border-box;background:#fff;border-right:1px solid #e6ebf5;font-size:12.5px;color:#455b7d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-gname-head{background:#f1f3f7!important;color:#8a98af!important;font-size:11px;z-index:5;padding:0 12px}
+.ov-time-row{height:34px;display:flex;align-items:stretch;position:relative;border-bottom:1px solid #edf0f5;background:#fff}
+.ov-time-row.ov-gparent{background:#f6f8fd}
+.ov-time-row.ov-gparent .ov-gname{background:#f6f8fd;font-weight:600;color:#2f4262}
+.ov-gtrack{position:relative;flex:0 0 auto;height:100%;background:repeating-linear-gradient(90deg,transparent,transparent 47px,#edf0f5 48px)}
+.ov-pbar{position:absolute;top:10px;height:14px;border-radius:7px;background:#5b8def;overflow:hidden}
+.ov-pdone{display:block;height:100%;background:#f0a63c}
+.ov-pbar.is-late{box-shadow:inset -3px 0 0 #d9480f}
+.ov-pbar.is-overdue{box-shadow:inset -3px 0 0 #d94a4a}
+.ov-today{position:absolute;top:34px;bottom:0;width:0;border-left:1px dashed #e0a37a;z-index:2;pointer-events:none}
+.ov-today b{position:absolute;top:2px;left:3px;font-size:10px;font-weight:500;color:#c98a5a;background:#fff8f1;border-radius:2px;padding:0 3px;white-space:nowrap}
+.ov-legend{background:#5b8def!important}
+.ov-legend.done{background:#f0a63c!important}
+
+#ov-return-bar{position:fixed;bottom:26px;left:266px;z-index:90;padding:6px 12px;border:1px solid #cfd9ea;border-radius:16px;background:#fff;color:#3d5a8a;font-size:12px;line-height:1.2;cursor:pointer;box-shadow:0 2px 8px rgba(30,60,110,.12)}
+#ov-return-bar:hover{border-color:#9fb6de;color:#1f3f75;background:#f7faff}
+
+.ov-gwrap{position:relative}
+.ov-time-head{height:32px!important}
+.ov-barlabel{position:sticky;left:8px;display:inline-block;max-width:240px;margin-top:0;padding:1px 6px;border:0;border-radius:4px;background:rgba(255,255,255,.88);color:#2f4262;font-size:12.5px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;cursor:default;z-index:3}
+button.ov-barlabel{cursor:pointer;color:#24406b}
+button.ov-barlabel:hover{background:#eaf1ff}
+.ov-bcaret{font-weight:400;margin-right:4px;color:#5b7096}
+.ov-time-row{position:relative}
+.ov-time-row .ov-gtrack{display:flex;align-items:center;height:100%}
+.ov-time-row .ov-barlabel{margin-left:0}
+.ov-plan-right .ov-gtrack{position:relative}
+.ov-time-head .ov-gtrack{display:block;height:100%}
 </style>
 <script>(()=>{
 'use strict';
@@ -9038,7 +9112,7 @@ async function open(sub='dashboard'){api()?.overviewRoleSync?.();overviewView=su
 const palette=['#5b7ee5','#67b8aa','#f0bd60','#e5857a','#9b94d5'],sampleTag=()=>'';
 let processMode='all',warnPage=1,rectifyType='safety',transferYear=now().slice(0,4),capacityYear=now().slice(0,4);
 const overviewDialog=document.createElement('dialog');overviewDialog.className='ov-dialog';document.body.append(overviewDialog);
-const byteSize=n=>n>=1073741824?(n/1073741824).toFixed(2)+' GB':n>=1048576?(n/1048576).toFixed(2)+' MB':n>=1024?(n/1024).toFixed(1)+' KB':n+' B';
+const byteSize=n=>((Number(n)||0)/1073741824).toFixed(2)+' GB';
 const sum=(xs,k)=>xs.reduce((n,x)=>n+(Number(x[k])||0),0),yearControl=(id,v)=>`<select id="${id}" aria-label="统计年份">${[Number(now().slice(0,4))-2,Number(now().slice(0,4))-1,Number(now().slice(0,4))].map(y=>`<option value="${y}" ${String(y)===v?'selected':''}>${y}年</option>`).join('')}</select>`,legend=names=>`<div class="ov-chart-legend">${names.map((n,i)=>`<span><i style="background:${palette[i]}"></i>${E(n)}</span>`).join('')}</div>`;
 const tipAttr=(title,rows)=>`data-ov-tip="${E(JSON.stringify({title,rows}))}" tabindex="0"`;
 const tipValue=(n,unit)=>String(n)+' '+unit;
@@ -9049,9 +9123,51 @@ const shortName=p=>p.name.length>16?p.name.slice(0,14)+'…':p.name;
 function sampleFor(p){const i=projects().findIndex(x=>x.id===p.id);return {safeClosed:8+i,safeOpen:2+i%3,qualClosed:7+i,qualOpen:1+i%2,safeOver:i%3,qualOver:i%2}}
 function sampleControl(){return ''}
 function projectBar(){const ps=projects(),i=ps.findIndex(p=>p.id===pid),p=ps[i];if(!p)return '<div class="ov-card ov-empty">暂无可查看项目</div>';const record=(read('projectDeclarationRecords')||[]).find?.(r=>r.code===pid)||{};return `<div class="mdb-project ov-project-switch"><div class="mdb-project-main"><span class="mdb-current">当前项目</span><span class="mdb-project-name ov-project-picker"><span>${E(p.name)}⌄</span><select id="ov-project" aria-label="当前项目">${ps.map(p=>`<option value="${E(p.id)}" ${p.id===pid?'selected':''}>${E(p.name)}</option>`).join('')}</select></span><span class="mdb-project-meta">项目类型：<b>${E(p.type||'—')}</b></span><span class="mdb-project-meta">拟开工年份：<b>${E(record.year||p.year||'—')}</b></span><span class="mdb-project-meta">建设周期：<b>${E(record.duration||p.duration||'—')}${record.duration||p.duration?'个月':''}</b></span></div><div class="mdb-project-pager"><button data-ov="prev-project" ${i<=0?'disabled':''}>上一页</button><span class="current">${i+1} / ${ps.length}</span><button data-ov="next-project" ${i>=ps.length-1?'disabled':''}>下一页</button></div></div>`}
-function milestones(d){return `<div class="ov-node-line">${d.summaries.map(g=>`<button data-ov="group" data-id="${g.group}" class="ov-node ${g.status==='已完成'?'done':g.status==='进行中'?'running':''}"><div class="ov-node-dot">${g.group+1}</div><div><strong>${g.name}</strong>${status(g.status)}<p>计划 ${E(g.start||'—')} 至 ${E(g.end||'—')}</p><p>实际 ${E(g.actualStart||'—')} 至 ${E(g.actualEnd||'—')}</p><small>完成 ${g.done}/${g.count} 项 · 预警 ${d.warnings.filter(w=>w.node.group===g.group).length} 条</small></div></button>`).join('')}</div>`}
-function localPlan(){const p=projects().find(p=>p.id===pid),d=p?data(p):null;return `<section class="ov-card ov-plan-section"><div class="ov-heading"><h3>项目周期计划</h3><div class="ov-actions">${bureau()?`<label>台站 <select id="ov-plan-station"><option value="">全部台站</option>${[...new Set(projects().map(p=>p.station))].map(s=>`<option ${filter===s?'selected':''}>${E(s)}</option>`).join('')}</select></label><label>项目 <select id="ov-plan-project" aria-label="进度计划项目">${projects().filter(p=>!filter||p.station===filter).map(p=>`<option value="${E(p.id)}" ${pid===p.id?'selected':''}>${E(p.name)}</option>`).join('')}</select></label>`:''}${d&&bureau()?B('本项目预警 '+d.warnings.length,'local-warnings'):''}${B('全屏查看','fullscreen')}</div></div>${bureau()?'<p class="ov-muted">选择项目查看勘察设计、招采及施工进度的里程碑与合并计划。</p>':''}${d?milestones(d)+plan(d):'<div class="ov-empty">暂无项目计划</div>'}</section>`}
-function bindPlan(){const l=page.querySelector('.ov-plan-left'),r=page.querySelector('.ov-plan-right');if(l&&r){let sync=false;const copy=(a,b)=>{if(sync)return;sync=true;b.scrollTop=a.scrollTop;sync=false};l.onscroll=()=>copy(l,r);r.onscroll=()=>copy(r,l)}}
+function milestones(d){
+  const warnOf=g=>d.warnings.filter(w=>w.node.group===g.group).length;
+  return `<div class="ov-parallel">
+    <div class="ov-parallel-head">
+      <h4>里程碑</h4>
+    </div>
+    <div class="ov-parallel-grid">${d.summaries.map(g=>{
+      const w=warnOf(g),pct=g.count?Math.round(g.done/g.count*100):0;
+      const cls=g.status==='已完成'?'is-done':g.status==='进行中'?'is-running':'';
+      return `<button type="button" class="ov-pcard ${cls}" data-ov="group" data-id="${g.group}">
+        <div class="ov-pcard-top"><span class="ov-pcard-name">${E(g.name)}</span>${status(g.status)}</div>
+        <div class="ov-pcard-kpis">
+          <div class="ov-pcard-kpi"><b>${g.done}</b><i>/${g.count}</i><span>已完成事项</span></div>
+          <div class="ov-pcard-kpi ${w?'is-warn':''}"><b>${w}</b><span>条预警</span></div>
+        </div>
+        <div class="ov-pcard-bar"><i style="width:${pct}%"></i></div>
+        <div class="ov-pcard-dates">
+          <div><span>计划</span><b>${E(g.start||'—')}</b><em>至</em><b>${E(g.end||'—')}</b></div>
+          <div><span>实际</span><b>${E(g.actualStart||'—')}</b><em>至</em><b>${E(g.actualEnd||'—')}</b></div>
+        </div>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
+}
+function localPlan(){const p=projects().find(p=>p.id===pid),d=p?data(p):null;return `<section class="ov-card ov-plan-section"><div class="ov-heading"><h3>项目周期计划</h3><div class="ov-actions">${bureau()?`<label>台站 <select id="ov-plan-station"><option value="">全部台站</option>${[...new Set(projects().map(p=>p.station))].map(s=>`<option ${filter===s?'selected':''}>${E(s)}</option>`).join('')}</select></label><label>项目 <select id="ov-plan-project" aria-label="进度计划项目">${projects().filter(p=>!filter||p.station===filter).map(p=>`<option value="${E(p.id)}" ${pid===p.id?'selected':''}>${E(p.name)}</option>`).join('')}</select></label>`:''}${d&&bureau()?B('本项目预警 '+d.warnings.length,'local-warnings'):''}${B('全屏查看','fullscreen')}</div></div>${bureau()&&!d?'<p class="ov-muted">请选择台站和项目，查看勘察设计、招采、施工进度的专项计划与合并计划。</p>':''}${d?milestones(d)+plan(d):'<div class="ov-empty">暂无项目计划</div>'}</section>`}
+let ovGanttKey='',ovGanttLeft=0;
+function bindPlan(){
+  const l=page.querySelector('.ov-plan-left'),r=page.querySelector('.ov-plan-right');
+  if(!l||!r)return;
+  let sync=false;
+  const copy=(a,b)=>{if(sync)return;sync=true;b.scrollTop=a.scrollTop;sync=false};
+  l.onscroll=()=>copy(l,r);
+  r.onscroll=()=>{ovGanttLeft=r.scrollLeft;copy(r,l)};
+  const key=pid+'|'+dimension+'|'+sourceFilter;
+  const today=r.querySelector('.ov-today');
+  if(ovGanttKey!==key){
+    ovGanttKey=key;
+    const track=today?parseFloat(today.style.left):0;
+    const ctxPx=30*(dimension==='日'?20:dimension==='周'?10:3);const target=today?Math.max(0,track-ctxPx-8):0;
+    r.scrollLeft=Math.max(0,Math.min(target,r.scrollWidth-r.clientWidth));
+    ovGanttLeft=r.scrollLeft;
+  }else{
+    r.scrollLeft=ovGanttLeft||0;
+  }
+}
 function updatePlan(){hideChartTip();const host=page.querySelector('#ov-plan-host');if(host){host.innerHTML=localPlan();bindPlan()}const warnings=page.querySelector('#ov-cycle-warnings');if(warnings)warnings.innerHTML=cycleWarnings()}
 function cycleWarnings(){const p=projects().find(p=>p.id===pid),d=p?data(p):null;return d?warningList(d.warnings,d.orders):'<div class="ov-card ov-empty">暂无可查看项目预警</div>'}
 function processChart(){const labels=['土方开挖','桩基施工','钢筋工程','模板工程','混凝土工程'],series=processMode==='all'?[[2,1,1,1,1],[0,1,4,1,1]]:[[1,1,0,1,1],[0,1,2,0,1]];return card('工序问题数',demo?plot(labels,[{name:'安全问题',values:series[0]},{name:'质量问题',values:series[1]}],'个',false,false,true):'<div class="ov-empty">暂未接入当前项目工序问题数据</div>',`<div class="ov-actions">${sampleTag()}<select id="ov-process-mode"><option value="all">全部问题</option><option value="open" ${processMode==='open'?'selected':''}>未闭环问题</option></select>${sampleControl()}${B('查看明细','process-details')}</div>`)}
@@ -9078,9 +9194,76 @@ function warningDetails(projectId){const p=projects().find(p=>p.id===projectId);
 
 function render(){hideChartTip();if(!active)return;activate();if(!projects().some(p=>p.id===pid))pid=projects()[0]?.id||'';if(filter&&!projects().some(p=>p.station===filter))filter='';page.innerHTML='<div class="ov-wrap">'+(overviewView==='cycle'?(!bureau()?projectBar():'')+'<div id="ov-plan-host">'+localPlan()+'</div><div id="ov-cycle-warnings">'+cycleWarnings()+'</div>':(bureau()?bureauPage():stationPage()))+'</div>';bindPlan()}
 function deviation(n){if(n.actualEnd&&n.end){const v=days(n.end,n.actualEnd);return `结束 ${v>0?'+':''}${v} 天`}if(n.end&&!n.actualEnd&&now()>n.end)return `未报结束 +${days(n.end,now())} 天`;if(n.actualStart&&n.start){const v=days(n.start,n.actualStart);return `开始 ${v>0?'+':''}${v} 天`}if(n.start&&now()>n.start)return `未报开始 +${days(n.start,now())} 天`;return '—'}
-function plan(d){const list=[];for(const g of d.summaries){if(sourceFilter!==''&&String(g.group)!==sourceFilter)continue;list.push(g);if(!collapsed.has(g.id))for(const n of d.nodes.filter(n=>n.group===g.group)){let parent=n.parent,hide=false;while(parent){if(collapsed.has(parent)){hide=true;break}parent=d.nodes.find(x=>x.id===parent)?.parent}if(!hide)list.push(n)}}const dates=list.flatMap(n=>[n.start,n.end,n.actualStart,n.actualEnd,n.actualStart&&!n.actualEnd?now():'']).filter(Boolean).sort(),from=dates[0],to=dates.at(-1),span=from?days(from,to)+1:1,scale=dimension==='日'?20:dimension==='周'?10:3,width=Math.max(650,span*scale),ticks=[];if(from){if(dimension==='月'){let t=new Date(D(from));t.setUTCDate(1);while(t.getTime()<=D(to)){const v=t.toISOString().slice(0,10);if(t.getTime()>=D(from))ticks.push(`<span style="left:${days(from,v)*scale}px">${v.slice(0,7)}</span>`);t.setUTCMonth(t.getUTCMonth()+1)}}else{const step=dimension==='日'?1:7;for(let i=0;i<span;i+=step){const v=new Date(D(from)+i*86400000).toISOString().slice(0,10);ticks.push(`<span style="left:${i*scale}px">${E(dimension==='日'?v.slice(8):v.slice(5))}</span>`)}}}
+function plan(d){
+  const list=[];
+  for(const g of d.summaries){
+    if(sourceFilter!==''&&String(g.group)!==sourceFilter)continue;
+    list.push(g);
+    if(!collapsed.has(g.id))for(const n of d.nodes.filter(n=>n.group===g.group)){
+      let parent=n.parent,hide=false;
+      while(parent){if(collapsed.has(parent)){hide=true;break}parent=d.nodes.find(x=>x.id===parent)?.parent}
+      if(!hide)list.push(n);
+    }
+  }
+  const dates=list.flatMap(n=>[n.start,n.end,n.actualStart,n.actualEnd,n.actualStart&&!n.actualEnd?now():'']).filter(Boolean).sort(),
+        from=dates[0],to=dates.at(-1),span=from?days(from,to)+1:1,
+        scale=dimension==='日'?20:dimension==='周'?10:3,
+        width=Math.max(650,span*scale),ticks=[];
+  if(from){
+    if(dimension==='月'){
+      let t=new Date(D(from));t.setUTCDate(1);
+      while(t.getTime()<=D(to)){const v=t.toISOString().slice(0,10);if(t.getTime()>=D(from))ticks.push(`<span style="left:${days(from,v)*scale}px">${v.slice(0,7)}</span>`);t.setUTCMonth(t.getUTCMonth()+1)}
+    }else{
+      const step=dimension==='日'?1:7;
+      for(let i=0;i<span;i+=step){const v=new Date(D(from)+i*86400000).toISOString().slice(0,10);ticks.push(`<span style="left:${i*scale}px">${E(dimension==='日'?v.slice(8):v.slice(5))}</span>`)}
+    }
+  }
+  const barOf=n=>{
+    if(!n.start||!n.end)return null;
+    const total=days(n.start,n.end)+1;
+    let done=0;
+    if(n.actualEnd)done=days(n.start,n.actualEnd)+1;
+    else if(n.actualStart)done=days(n.start,now()<n.start?n.start:(now()>n.end?n.end:now()))+1;
+    done=Math.max(0,Math.min(total,done));
+    const pct=total?Math.round(done/total*100):0;
+    const late=n.actualEnd?n.actualEnd>n.end:(now()>n.end);
+    const cls=late?(n.actualStart?'is-late':'is-overdue'):'';
+    const w=Math.max(6,total*scale),left=days(from,n.start)*scale;
+    const tip=[{label:'计划开始',value:n.start},{label:'计划结束',value:n.end},{label:'工期',value:total+' 天'},
+      {label:'实际开始',value:n.actualStart||'—'},{label:'实际完成',value:n.actualEnd||(n.actualStart?'进行中':'未开始')},
+      {label:'完成度',value:pct+'%'},{label:'责任人',value:n.owner||'—'}];
+    return {left,w,html:`<div class="ov-pbar ${cls}" style="left:${left}px;width:${w}px" ${tipAttr(n.name,tip)}><i class="ov-pdone" style="width:${pct}%"></i></div>`};
+  };
+  const textW=t=>Math.min(240,Math.max(48,String(t||'').length*13+18));
+  const labelStyle=(n,bar)=>{
+    if(!bar)return 'margin-left:8px';
+    const inside=bar.w>textW(n.name);
+    return `margin-left:${inside?bar.left+8:bar.left+bar.w+8}px`;
+  };
+  const rows=list.map(n=>{
+    const bar=barOf(n);
+    const carets=!n.leaf?`<b class="ov-bcaret">${collapsed.has(n.id)?'⊞':'⊟'}</b>`:'';
+    const label=!n.leaf
+      ? `<button type="button" class="ov-barlabel" data-ov="toggle" data-id="${E(n.id)}" style="${labelStyle(n,bar)}">${carets}${E(n.name)}</button>`
+      : `<span class="ov-barlabel" style="${labelStyle(n,bar)}">${E(n.name)}</span>`;
+    return `<div class="ov-time-row ${n.level===0?'ov-gparent':''}">
+      <div class="ov-gtrack" style="width:${width}px">${bar?bar.html:''}${label}</div>
+    </div>`;
+  }).join('');
+  const todayIdx=(from&&now()>=from&&now()<=to)?days(from,now()):null;
+  const gantt=`<div class="ov-gwrap" style="width:${width}px">
+      <div class="ov-time-head"><div class="ov-gtrack" style="width:${width}px">${ticks.join('')}</div></div>
+      ${rows}
+      ${todayIdx!==null?`<div class="ov-today" style="left:${todayIdx*scale}px"><b>今天</b></div>`:''}
+    </div>`;
+  const head=['等级','计划开始时间','计划结束时间','责任人','工期','实际开始时间','实际结束时间','偏差天数'];
+  const left=`<div class="ov-plan-left">${T(head,list.map(n=>`<tr class="${n.level===0?'ov-parent':''}"><td>${['一级','二级','三级','四级','五级','六级'][n.level]||'—'}</td><td>${E(n.start||'—')}</td><td>${E(n.end||'—')}</td><td>${E(n.owner||'—')}</td><td>${n.start&&n.end?days(n.start,n.end)+1+' 天':'—'}</td><td>${E(n.actualStart||'—')}</td><td>${E(n.actualEnd||'—')}</td><td title="${E(deviation(n))}">${E(deviation(n))}</td></tr>`).join(''))}</div>`;
+  return card('项目合并计划',
+    `<p class="ov-muted">许可计划作为勘察设计完成标准；招采实际开始取开标时间，实际结束取合同签订时间。完成情况：<i class="ov-legend done"></i> 已完成 <i class="ov-legend"></i> 未完成</p>
+     <div class="ov-plan">${left}<div class="ov-plan-right">${gantt}</div></div>`,
+    `<div class="ov-actions"><select id="ov-source"><option value="">全部计划</option>${groups.map((g,i)=>`<option value="${i}" ${String(i)===sourceFilter?'selected':''}>${g}</option>`).join('')}</select><select id="ov-dimension">${['日','周','月'].map(x=>`<option ${dimension===x?'selected':''}>${x}</option>`).join('')}</select>${B('全部展开','expand')}${B('全部收起','collapse')}</div>`);
+}
 
-return card('项目合并计划',`<p class="ov-muted">许可计划作为勘察设计完成标准；招采实际开始取开标时间，实际结束取合同签订时间。计划与实际：<i class="ov-legend"></i> 计划 <i class="ov-legend actual"></i> 实际</p><div class="ov-plan"><div class="ov-plan-left">${T(['事项名称','等级','计划开始时间','计划结束时间','责任人','工期','实际开始时间','实际结束时间','偏差天数','操作'],list.map(n=>`<tr class="${n.level===0?'ov-parent':''}"><td><div style="padding-left:${n.level*16}px">${!n.leaf?L(collapsed.has(n.id)?'⊞':'⊟','toggle',n.id):''}${E(n.name)}</div></td><td>${['一级','二级','三级','四级','五级','六级'][n.level]||'—'}</td><td>${E(n.start||'—')}</td><td>${E(n.end||'—')}</td><td>${E(n.owner||'—')}</td><td>${n.start&&n.end?days(n.start,n.end)+1+' 天':'—'}</td><td>${E(n.actualStart||'—')}</td><td>${E(n.actualEnd||'—')}</td><td>${E(deviation(n))}</td><td>${L('来源','source',String(n.group))}${bureau()?L('下发整改单','node-order',n.id):''}</td></tr>`).join(''))}</div><div class="ov-plan-right"><div style="width:${width}px"><div class="ov-time-head">${ticks.join('')}</div>${list.map(n=>`<div class="ov-time-row">${n.start&&n.end?`<div class="ov-bar" style="left:${days(from,n.start)*scale}px;width:${Math.max(3,(days(n.start,n.end)+1)*scale)}px" ${tipAttr(n.name,[{label:"计划开始",value:n.start},{label:"计划结束",value:n.end},{label:"工期",value:days(n.start,n.end)+1+" 天"},{label:"责任人",value:n.owner||"—"}])}></div>`:''}${n.actualStart?`<div class="ov-bar actual" style="left:${days(from,n.actualStart)*scale}px;width:${Math.max(3,(days(n.actualStart,n.actualEnd||now())+1)*scale)}px" ${tipAttr(n.name,[{label:"实际开始",value:n.actualStart},{label:"实际结束",value:n.actualEnd||"进行中"},{label:"责任人",value:n.owner||"—"}])}></div>`:''}</div>`).join('')}</div></div></div>`,`<div class="ov-actions"><select id="ov-source"><option value="">全部计划</option>${groups.map((g,i)=>`<option value="${i}" ${String(i)===sourceFilter?'selected':''}>${g}</option>`).join('')}</select><select id="ov-dimension">${['日','周','月'].map(x=>`<option ${dimension===x?'selected':''}>${x}</option>`).join('')}</select>${B('全部展开','expand')}${B('全部收起','collapse')}</div>`)}
 const types=['逾期未上报预警','任务开始偏差','任务结束偏差'];
 function warningExamples(){const p=projects().find(p=>p.id==='DWQFSTGZ202601')||projects()[0];if(!p)return [];const date=n=>new Date(D(now())+n*86400000).toISOString().slice(0,10);return types.map((type,i)=>{const node={id:'ov-warning-example-node-'+p.id+'-'+i,name:['报建资料补充','发射设备招采','主体工程验收'][i],owner:p.owner||'刘浩东',group:i,level:1};return {id:'ov-warning-example-'+p.id+'-'+i,project:p,node,type,part:i===2?'结束':'开始',plan:date(-8),actual:i===0?'':date(-3),num:i===0?8:5,example:true,description:type+'：'+node.name+'，'+(i===0?'计划日期已过但未填报实际日期':'实际日期较计划滞后5天')};})}
 function currentWarnings(ws){const map=new Map();for(const w of ws){const key=w.project.id+'|'+w.node.id,old=map.get(key);if(!old||((w.part==='结束'?2:0)+(w.type==='逾期未上报预警'?1:0))>((old.part==='结束'?2:0)+(old.type==='逾期未上报预警'?1:0)))map.set(key,w)}return [...map.values()]}
@@ -9090,14 +9273,28 @@ function warningList(ws,orders){const examples=warningExamples().filter(w=>overv
 function allWarnings(){return [...projects().flatMap(p=>data(p).warnings),...warningExamples()]}
 function leave(){hideChartTip();active=false;page.classList.add('hidden')}
 function selectedWarning(id){return allWarnings().find(w=>w.id===id)}
+function markReturn(){
+  window.__wrsReturn={view:overviewView,pid,dimension,sourceFilter,collapsed:[...collapsed],scroll:page.scrollTop,at:Date.now()};
+}
+async function wrsReturnToOverview(){
+  const c=window.__wrsReturn;window.__wrsReturn=null;returnBar.hidden=true;
+  if(!c){open();return}
+  await open(c.view==='dashboard'?'dashboard':'cycle');
+  pid=c.pid||pid;
+  dimension=c.dimension||dimension;
+  sourceFilter=c.sourceFilter||'';
+  collapsed=new Set(c.collapsed||[]);
+  render();
+  requestAnimationFrame(()=>{page.scrollTop=c.scroll||0});
+}
 function handleAction(e){const b=e.target.closest('[data-ov]');if(!b||b.disabled)return;const a=b.dataset.ov,id=b.dataset.id;
-if(a==='recent-order'){overviewReturn={top:page.scrollTop};leave();api().overviewViewOrder(id);return}
+if(a==='recent-order'){overviewReturn={top:page.scrollTop};markReturn();leave();api().overviewViewOrder(id);return}
 if(a==='warning-history'){const w=selectedWarning(id);if(w)showWarningHistory(w);return}
-if(a==='history-order'){const r=warningHistory.find(r=>r.key===id);if(!r||!projects().some(p=>p.id===r.project.id)||!bureau())return;overviewDialog.close();leave();api().overviewOrder(r.project.id,{id:r.id,type:r.type,name:r.node.name,description:r.description});return}
+if(a==='history-order'){const r=warningHistory.find(r=>r.key===id);if(!r||!projects().some(p=>p.id===r.project.id)||!bureau())return;overviewDialog.close();markReturn();leave();api().overviewOrder(r.project.id,{id:r.id,type:r.type,name:r.node.name,description:r.description});return}
 if(a==='warning-filter'||a==='warning-reset'){warningType=a==='warning-reset'?'':page.querySelector('#ov-warning-type').value;warnPage=1;const top=page.scrollTop;render();page.scrollTop=top;return}
 if(a==='rectify-type'){rectifyType=id;const top=page.scrollTop;render();page.scrollTop=top;return}
 if(a==='close-dialog'){overviewDialog.close();return}
-if(a==='dialog-order'){const w=selectedWarning(id);if(!w||!bureau())return;overviewDialog.close();leave();api().overviewOrder(w.project.id,{id:w.id,type:w.type,name:w.node.name,description:w.description,example:!!w.example});return}
+if(a==='dialog-order'){const w=selectedWarning(id);if(!w||!bureau())return;overviewDialog.close();markReturn();leave();api().overviewOrder(w.project.id,{id:w.id,type:w.type,name:w.node.name,description:w.description,example:!!w.example});return}
 if(a==='chart-warning'){warningDetails(id);return}
 if(a==='local-warnings'){warningDetails(pid);return}
 if(a==='process-details'){showDialog('当前项目工序问题明细',demo?'<p class="ov-muted">按问题计数</p>'+T(['工序','安全问题数','质量问题数'],['土方开挖','桩基施工','钢筋工程','模板工程','混凝土工程'].map((n,i)=>`<tr><td>${n}</td><td>${(processMode==='all'?[2,1,1,1,1]:[1,1,0,1,1])[i]}</td><td>${(processMode==='all'?[0,1,4,1,1]:[0,1,2,0,1])[i]}</td></tr>`).join('')):'<div class="ov-empty">暂未接入工序问题数据</div>');return}
@@ -9108,9 +9305,9 @@ else if(a==='toggle'){collapsed.has(id)?collapsed.delete(id):collapsed.add(id);u
 else if(a==='expand'||a==='collapse'){collapsed=a==='expand'?new Set():new Set(['g0','g1','g2']);updatePlan();return}
 else if(a==='group'){sourceFilter=id;updatePlan();return}
 else if(a==='fullscreen'){const host=page.querySelector('.ov-plan-section');if(document.fullscreenElement)document.exitFullscreen();else host?.requestFullscreen?.().catch(()=>{});return}
-else if(a==='source'||a==='warning-source'){const w=a==='warning-source'?selectedWarning(id):null,g=w?w.node.group:Number(id),p=w?w.project.id:pid;leave();[window.wrsPermit,window.wrsProcurement,window.wrsMasterPlan][g].openProject(p);return}
-else if(['order','global-order','warning-order','node-order'].includes(a)){if(!bureau())return;let target=pid,context;if(a==='global-order')target=projects()[0]?.id;if(a==='warning-order'){const w=selectedWarning(id);if(!w)return;target=w.project.id;context={id:w.id,type:w.type,name:w.node.name,description:w.description,example:!!w.example}}if(a==='node-order'){const d=data(projects().find(p=>p.id===pid)),n=[...d.summaries,...d.nodes].find(n=>n.id===id);context=n?{id:n.id,type:'计划安排检查',name:n.name,description:groups[n.group]+'：'+n.name}:null}leave();api().overviewOrder(target,context);return}
-else if(a==='supervision'||a==='assets'){leave();api().open(a==='assets'?'assets':'supervision');return}
+else if(a==='source'||a==='warning-source'){const w=a==='warning-source'?selectedWarning(id):null,g=w?w.node.group:Number(id),p=w?w.project.id:pid;markReturn();leave();[window.wrsPermit,window.wrsProcurement,window.wrsMasterPlan][g].openProject(p);return}
+else if(['order','global-order','warning-order','node-order'].includes(a)){if(!bureau())return;let target=pid,context;if(a==='global-order')target=projects()[0]?.id;if(a==='warning-order'){const w=selectedWarning(id);if(!w)return;target=w.project.id;context={id:w.id,type:w.type,name:w.node.name,description:w.description,example:!!w.example}}if(a==='node-order'){const d=data(projects().find(p=>p.id===pid)),n=[...d.summaries,...d.nodes].find(n=>n.id===id);context=n?{id:n.id,type:'计划安排检查',name:n.name,description:groups[n.group]+'：'+n.name}:null}markReturn();leave();api().overviewOrder(target,context);return}
+else if(a==='supervision'||a==='assets'){markReturn();leave();api().open(a==='assets'?'assets':'supervision');return}
 const top=page.scrollTop;render();page.scrollTop=top;
 }
 page.addEventListener('click',handleAction);overviewDialog.addEventListener('click',handleAction);
@@ -9138,9 +9335,23 @@ window.addEventListener('scroll',hideChartTip,true);window.addEventListener('res
 let warningHistory=[],warningHistoryDB=null,historySaveError='';const historyPending=new Map();
 const warningHistoryReady=new Promise(resolve=>{const r=indexedDB.open('wrs-overview-warning-history-v1',1);r.onupgradeneeded=()=>r.result.createObjectStore('records',{keyPath:'key'});r.onerror=()=>{historySaveError='预警历史暂时无法读取';resolve()};r.onsuccess=()=>{warningHistoryDB=r.result;const q=warningHistoryDB.transaction('records').objectStore('records').getAll();q.onsuccess=()=>{warningHistory=q.result;resolve()};q.onerror=()=>{historySaveError='预警历史暂时无法读取';resolve()}}});
 function observeWarnings(ws){for(const w of ws){if(w.example)continue;const key=JSON.stringify([w.project.id,w.node.id,now(),w.type,w.part,w.plan,w.actual,w.num]);if(!warningHistory.some(r=>r.key===key)&&!historyPending.has(key))historyPending.set(key,{...structuredClone(w),key,recordedAt:new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}),parentName:warningParent(w)})}if(!warningHistoryDB||!historyPending.size)return;const batch=[...historyPending.values()],tx=warningHistoryDB.transaction('records','readwrite');for(const r of batch)tx.objectStore('records').put(r);tx.oncomplete=()=>{for(const r of batch){if(!warningHistory.some(x=>x.key===r.key))warningHistory.push(r);historyPending.delete(r.key)}historySaveError=''};tx.onerror=()=>{historySaveError='本次预警记录保存失败，请刷新重试'}}
-function showWarningHistory(w){const allowed=projects().some(p=>p.id===w.project.id);if(!allowed)return;const current=w.example?[{...w,key:w.id,recordedAt:now(),example:true}]:[...warningHistory,...historyPending.values()].filter(r=>r.project.id===w.project.id&&r.node.id===w.node.id),rows=[...new Map(current.map(r=>[r.key,r])).values()].sort((a,b)=>b.recordedAt.localeCompare(a.recordedAt));showDialog(w.node.name+' · 预警记录',`<p class="ov-muted">${w.example?'当前事项预警记录':'展示该事项已保存的历次预警。'} ${E(historySaveError)}</p>${T(['记录时间','预警类型','触发环节','计划日期','实际日期','偏差天数','操作'],rows.map(r=>`<tr><td>${E(r.recordedAt)}</td><td>${E(r.type)}</td><td>${E(r.part)}</td><td>${E(r.plan)}</td><td>${E(r.actual||'未上报')}</td><td>${r.num} 天</td><td>${bureau()?L('下发整改单',r.example?'dialog-order':'history-order',r.example?r.id:r.key):'—'}</td></tr>`).join(''))}`)}
+function showWarningHistory(w){const allowed=projects().some(p=>p.id===w.project.id);if(!allowed)return;const current=w.example?[{...w,key:w.id,recordedAt:now(),example:true}]:[...warningHistory,...historyPending.values()].filter(r=>r.project.id===w.project.id&&r.node.id===w.node.id),rows=[...new Map(current.map(r=>[r.key,r])).values()].sort((a,b)=>b.recordedAt.localeCompare(a.recordedAt));showDialog(w.node.name+' · 预警记录',`<p class="ov-muted">${w.example?'当前事项预警记录':'展示该事项已保存的历次预警。'} ${E(historySaveError)}</p>${T(['记录时间','预警类型','触发环节','计划日期','实际日期','偏差天数'],rows.map(r=>`<tr><td>${E(r.recordedAt)}</td><td>${E(r.type)}</td><td>${E(r.part)}</td><td>${E(r.plan)}</td><td>${E(r.actual||'未上报')}</td><td>${r.num} 天</td></tr>`).join(''))}`)}
 
-window.wrsOverview={open};
+const returnBar=document.createElement('button');
+returnBar.type='button';returnBar.id='ov-return-bar';returnBar.hidden=true;returnBar.textContent='← 返回项目总览';
+returnBar.addEventListener('click',()=>wrsReturnToOverview());
+document.body.append(returnBar);
+setInterval(()=>{
+  const brand=(document.querySelector('#brand-module')?.textContent||'').trim();
+  const needsBar=brand.includes('监管')||brand.includes('资产');
+  returnBar.hidden=!(window.__wrsReturn&&!active&&needsBar);
+},700);
+document.addEventListener('click',e=>{
+  const back=e.target.closest('[data-nm-act="order-back"],[data-pm="projects"],[data-cp="projects"],[data-mp="projects"]');
+  if(back&&window.__wrsReturn){e.preventDefault();e.stopImmediatePropagation();wrsReturnToOverview();return}
+  if(e.target.closest('.global-item')||e.target.closest('.module-nav .module-item'))window.__wrsReturn=null;
+},true);
+window.wrsReturnToOverview=wrsReturnToOverview;window.wrsOverview={open,wrsReturnToOverview};
 })();
 
 
