@@ -1,0 +1,8 @@
+{
+  "version": "1.9",
+  "date": "2026-11-12",
+  "note": "文件类型分布改为文件格式分布，统一PDF、Word、Excel、CAD、BIM模型、图片、音视频及其他八类统计，按文件后缀识别。",
+  "source": "0917优化项.html",
+  "htmlFile": "平台演示-V1.9.html",
+  "docx": "需求说明书-V1.9.docx"
+}

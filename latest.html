@@ -7795,21 +7795,34 @@ function refModes(){return `<div class="nm-dashboard-data-bar"><div>${btn('演�
 function refPeriodControl(top=false){const period=top?refTopPeriod:refPeriod,value=top?refTopMonth:refMonth;return `<div class="ref-period"><select data-ref-period="${top?'top':'transfer'}" aria-label="${top?'总量':'移交'}统计周期">${opt([{id:'month',name:'月'},{id:'year',name:'年'}],period)}</select><input data-ref-month="${top?'top':'transfer'}" aria-label="${top?'总量':'移交'}统计时间" type="${period==='month'?'month':'number'}" value="${esc(period==='month'?value:value.slice(0,4))}" ${period==='year'?'min="2000" max="2100"':''}></div>`}
 
 // Asset statistics: file formats form exclusive categories, independent of project phases.
+// Exclusive file-format groups. Business labels such as "图纸" never determine the format.
+const assetFileFormatsR86=['PDF','Word','Excel','CAD','BIM模型','图片','音视频','其他'];
 function refAssetFileCategory(asset){
- const name=String(asset.name||asset.fileName||'').split(/[?#]/)[0],suffix=name.includes('.')?name.split('.').pop().toLowerCase():'',kind=String(asset.type||asset.mimeType||'').toLowerCase();
- const ext=suffix||kind.replace(/^\./,'');
- if(/^(dwg|dxf|dgn|dwf|dwfx)$/.test(ext)||/图纸|cad/.test(kind))return '图纸';
- if(/^(ifc|rvt|rfa|nwd|nwc|obj|fbx|gltf|glb|skp|3ds|stl)$/.test(ext)||/模型|model/.test(kind))return '模型';
- if(/^(jpg|jpeg|png|gif|bmp|webp|tif|tiff|svg|heic)$/.test(ext)||/^image\//.test(kind)||/图片|图像/.test(kind))return '图片';
- if(/^(mp4|avi|mov|mkv|wmv|webm|mp3|wav|aac|flac|ogg|m4a)$/.test(ext)||/^(audio|video)\//.test(kind)||/音频|视频|音视频/.test(kind))return '音视频';
- if(/^(xls|xlsx|csv|ods|et)$/.test(ext)||/spreadsheet|excel|表格/.test(kind))return '表格';
- if(/^(pdf|doc|docx|txt|rtf|odt|wps|ppt|pptx|md)$/.test(ext)||/pdf|word|document|presentation|^text\/|文档/.test(kind))return '文档';
+ const name=String(asset.name||asset.fileName||'').split(/[?#]/)[0].trim(),match=name.match(/\.([^.\s]+)$/),kind=String(asset.mimeType||asset.type||'').trim().toLowerCase();
+ const ext=match?match[1].toLowerCase():kind.replace(/^\./,'');
+ if(ext==='pdf')return 'PDF';
+ if(/^(doc|docx|docm|dot|dotx|dotm|rtf|odt|wps)$/.test(ext))return 'Word';
+ if(/^(xls|xlsx|xlsm|xlsb|xlt|xltx|xltm|csv|ods|et)$/.test(ext))return 'Excel';
+ if(/^(dwg|dxf|dgn|dwf|dwfx)$/.test(ext))return 'CAD';
+ if(/^(ifc|rvt|rfa|nwd|nwc|obj|fbx|gltf|glb|skp|3ds|stl)$/.test(ext))return 'BIM模型';
+ if(/^(jpg|jpeg|png|gif|bmp|webp|tif|tiff|svg|heic|heif|avif)$/.test(ext))return '图片';
+ if(/^(mp4|avi|mov|mkv|wmv|webm|mp3|wav|aac|flac|ogg|m4a|mpeg|mpg|wma)$/.test(ext))return '音视频';
+ // A present but unknown suffix remains "其他"; only suffixless names use MIME metadata.
+ if(!match){
+  if(/^application\/pdf(?:;|$)/.test(kind))return 'PDF';
+  if(/msword|wordprocessingml|vnd\.oasis\.opendocument\.text|application\/rtf/.test(kind))return 'Word';
+  if(/ms-excel|spreadsheetml|vnd\.oasis\.opendocument\.spreadsheet|text\/csv/.test(kind))return 'Excel';
+  if(/^(application\/(acad|x-acad|autocad|x-autocad|dwg|x-dwg|vnd\.dwg|dxf|x-dxf)|image\/vnd\.dwg)(?:;|$)/.test(kind))return 'CAD';
+  if(/^image\//.test(kind))return '图片';
+  if(/^(audio|video)\//.test(kind))return '音视频';
+ }
  return '其他';
 }
+
 function refAssetTypeItems(rows){
- const names=['文档','图纸','模型','图片','音视频','表格','其他'];
+ const names=assetFileFormatsR86;
  if(rows&&dashboardUsesDemo()){
-  const total=rows.reduce((n,r)=>n+r.archived+r.unarchived,0),weights=[36,20,6,16,8,10,4];let used=0;
+  const total=rows.reduce((n,r)=>n+r.archived+r.unarchived,0),weights=[24,18,12,14,10,8,8,6];let used=0;
   return names.map((name,i)=>{const n=i===names.length-1?total-used:Math.floor(total*weights[i]/100);used+=n;return [name,n]});
  }
  const assets=rows?rows.flatMap(r=>r.as||[]):scopeAssets();
@@ -7830,10 +7843,10 @@ function refAssetCategoryItems(rows){
     return [label,demo?Math.round(v/sum*total):v];
   }).filter(x=>x[1]>0);
 }
-function refAssetTypeChart(items){
+function refAssetTypeChart(items,title='资产文件分布'){
  const total=items.reduce((n,x)=>n+x[1],0),radius=74,circ=2*Math.PI*radius;let offset=0;
- const arcs=items.map(([name,n],i)=>{const length=total?n/total*circ:0,tip=name+'：'+n+' 项，占比 '+(total?n/total*100:0).toFixed(1)+'%';const arc=n?'<circle tabindex="0" role="img" aria-label="'+esc(tip)+'" cx="100" cy="100" r="74" fill="none" stroke="'+refColors[i%8]+'" stroke-width="24" stroke-dasharray="'+length+' '+(circ-length)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 100 100)"><title>'+esc(tip)+'</title></circle>':'';offset+=length;return arc}).join('');
- return '<div class="ref-donut-wrap" data-asset-type-chart><svg viewBox="0 0 200 200" style="width:190px;max-width:45%;flex-shrink:0" role="img" aria-label="资产类型分布"><circle cx="100" cy="100" r="74" fill="none" stroke="#eaf0f8" stroke-width="24"/>'+arcs+'<text x="100" y="91" text-anchor="middle" fill="#66758c" style="font-size:14px">资产文件</text><text x="100" y="120" text-anchor="middle" fill="#3b5072" style="font-size:28px;font-weight:600">'+total+'</text></svg><div class="ref-legend">'+items.map(([name,n],i)=>{const percent=(total?n/total*100:0).toFixed(1);return '<div tabindex="0" title="'+esc(name+'：'+n+' 项，占比 '+percent+'%')+'"><i style="background:'+refColors[i%8]+'"></i><span>'+name+'</span><b>'+percent+'%</b><em>'+n+'</em></div>'}).join('')+'</div></div>';
+ const arcs=items.map(([name,n],i)=>{const length=total?n/total*circ:0,tip=name+'：'+n+' 份，占比 '+(total?n/total*100:0).toFixed(1)+'%';const arc=n?'<circle tabindex="0" role="img" aria-label="'+esc(tip)+'" cx="100" cy="100" r="74" fill="none" stroke="'+refColors[i%8]+'" stroke-width="24" stroke-dasharray="'+length+' '+(circ-length)+'" stroke-dashoffset="'+(-offset)+'" transform="rotate(-90 100 100)"><title>'+esc(tip)+'</title></circle>':'';offset+=length;return arc}).join('');
+ return '<div class="ref-donut-wrap" data-asset-type-chart><svg viewBox="0 0 200 200" style="width:190px;max-width:45%;flex-shrink:0" role="img" aria-label="'+esc(title)+'"><circle cx="100" cy="100" r="74" fill="none" stroke="#eaf0f8" stroke-width="24"/>'+arcs+'<text x="100" y="91" text-anchor="middle" fill="#66758c" style="font-size:14px">资产文件</text><text x="100" y="120" text-anchor="middle" fill="#3b5072" style="font-size:28px;font-weight:600">'+total+'</text></svg><div class="ref-legend">'+items.map(([name,n],i)=>{const percent=(total?n/total*100:0).toFixed(1);return '<div tabindex="0" title="'+esc(name+'：'+n+' 份，占比 '+percent+'%')+'"><i style="background:'+refColors[i%8]+'"></i><span>'+name+'</span><b>'+percent+'%</b><em>'+n+'</em></div>'}).join('')+'</div></div>';
 }
 
 function refAssetDashboard(){const rows=refRows(),sum=k=>rows.reduce((s,r)=>s+r[k],0),count=sum('archived')+sum('unarchived'),period=refPeriod==='month'?refMonth:refMonth.slice(0,4),topPeriod=refTopPeriod==='month'?refTopMonth:refTopMonth.slice(0,4),demo=dashboardUsesDemo(),transfers=rows.map((r,i)=>({...r,n:demo?(period===today().slice(0,period.length)?r.transfers:0):r.ts.filter(t=>(t.createdAt||t.start||'').startsWith(period)).length})),rank=rows.map(r=>({...r,rankBytes:demo?r.bytes*(topPeriod===today().slice(0,topPeriod.length)?1:.7):r.as.filter(a=>(a.createdAt||'').slice(0,10)<=topPeriod+(refTopPeriod==='month'?'-31':'-12-31')).reduce((s,a)=>s+(Number(a.bytes)||0),0)})).sort((a,b)=>b.rankBytes-a.rankBytes).slice(0,5),max=Math.max(1,...rank.map(r=>r.rankBytes));return `<div class="nm-head"><h1>数字资产统计</h1>${btn('查看资料归档','go-assets')}</div>${refModes()}<div class="ref-dashboard" data-ref-dashboard="assets">${refKpis([['数字资产总量',(sum('bytes')/1073741824).toFixed(2),'GB'],['资产文件总数',count,'项'],['已归档文档数',sum('archived'),'项'],['归档率',count?(sum('archived')/count*100).toFixed(2):'—','%'],['资产移交数',sum('transfers'),'次']])}<div class="ref-grid ref-wide-left">${refPanel('数字资产统计分析',refChart(rows,[{name:'已归档数',color:'#5682f5',get:r=>r.archived},{name:'未归档数',color:'#d0ddff',get:r=>r.unarchived}],'项',true))}${refPanel('档案类别占比',refAssetTypeChart(refAssetCategoryItems(rows)))}${refPanel('资产移交数量统计',`<p class="ref-transfer-total">总移交次数：${transfers.reduce((s,r)=>s+r.n,0)} 次</p>`+refChart(transfers,[{name:'移交次数',color:'#e8a044',get:r=>r.n}],'次'),refPeriodControl())}${refPanel('数字资产总量 TOP5',rank.length?`<div class="ref-rank">${rank.map(r=>`<div title="${esc(r.p.name)}"><span>${esc(r.p.name)}</span><div><i style="width:${r.rankBytes/max*100}%"></i></div><b>${(r.rankBytes/1073741824).toFixed(2)} GB</b></div>`).join('')}</div>`:'<div class="nm-empty">暂无数据</div>',refPeriodControl(true))}</div><p class="nm-note">归档率＝已归档文件数÷文件总数。总量按文件大小求和；移交按记录计次。TOP5 为所选月末／年末前累计文件总量。</p></div>`}
@@ -8197,7 +8210,7 @@ function assetStatisticsSnapshotR79(options={}){
  for(const t of transfers){if(t.archiveSync?.simulation!==false)continue;hasFormalReceipt=true;for(const b of t.archiveSync.batches||[]){if(b.status!=='SUCCESS')continue;for(const id of b.assetIds||[]){const key=t.project+'|'+id;if(validAssets.has(key)){success.add(key);if(b.incremental)incremental.add(key)}}}}
  const trend=Array.from({length:12},(_,i)=>{const m=year+'-'+String(i+1).padStart(2,'0'),cutoff=m===month?date:m+'-31',future=m>month;return {month:m,newCount:future?null:assets.filter(a=>String(a.createdAt||'').startsWith(m)).length,cumulative:future?null:assets.filter(a=>a.createdAt&&String(a.createdAt).slice(0,10)<=cutoff).length,transfers:future?null:transfers.filter(t=>String(t.createdAt||'').startsWith(m)).length};});
  const bound=new Set();for(const t of transfers)for(const b of t.directoryBindings||t.dirIds||[]){const id=typeof b==='string'?b:b.id||b.dirId||b.directoryId;if(id)bound.add(t.project+'|'+id)}
- return {demo,date,year,month,projects:ps,project:requested,selected:scoped,totals:{files:assets.length,bytes:assets.reduce((s,a)=>s+Math.max(0,Number(a.bytes)||0),0),newFiles:assets.filter(a=>String(a.createdAt||'').startsWith(month)).length,relationships:transfers.length,directories:bound.size,scheduled:transfers.filter(t=>t.plannedTransferAt).length,success:hasFormalReceipt?success.size:null,incremental:hasFormalReceipt?incremental.size:null},sources:group(assets,sourceName),types:group(assets,refAssetFileCategory),directories:group(assets,rootName),trend,projectRows:scoped.map(p=>({p,files:assets.filter(a=>a.project===p.id).length,bytes:assets.filter(a=>a.project===p.id).reduce((s,a)=>s+Math.max(0,Number(a.bytes)||0),0)})),plans:transfers.filter(t=>/^\d{4}-\d{2}-\d{2}$/.test(t.plannedTransferAt||'')).map(t=>({id:t.id,project:t.project,name:t.content||'资产移交',date:t.plannedTransferAt})).sort((a,b)=>a.date.localeCompare(b.date)),undated:assets.filter(a=>!a.createdAt).length};
+ return {demo,date,year,month,projects:ps,project:requested,selected:scoped,totals:{files:assets.length,bytes:assets.reduce((s,a)=>s+Math.max(0,Number(a.bytes)||0),0),newFiles:assets.filter(a=>String(a.createdAt||'').startsWith(month)).length,relationships:transfers.length,directories:bound.size,scheduled:transfers.filter(t=>t.plannedTransferAt).length,success:hasFormalReceipt?success.size:null,incremental:hasFormalReceipt?incremental.size:null},sources:group(assets,sourceName),types:assetFileFormatsR86.map(name=>[name,assets.filter(a=>refAssetFileCategory(a)===name).length]),directories:group(assets,rootName),trend,projectRows:scoped.map(p=>({p,files:assets.filter(a=>a.project===p.id).length,bytes:assets.filter(a=>a.project===p.id).reduce((s,a)=>s+Math.max(0,Number(a.bytes)||0),0)})),plans:transfers.filter(t=>/^\d{4}-\d{2}-\d{2}$/.test(t.plannedTransferAt||'')).map(t=>({id:t.id,project:t.project,name:t.content||'资产移交',date:t.plannedTransferAt})).sort((a,b)=>a.date.localeCompare(b.date)),undated:assets.filter(a=>!a.createdAt).length};
 }
 function assetStatisticsSizeR79(n){return n>=1073741824?(n/1073741824).toFixed(2)+' GB':n>=1048576?(n/1048576).toFixed(2)+' MB':n>=1024?(n/1024).toFixed(1)+' KB':n+' B'}
 function assetStatisticsBarsR79(items,unit='份',capacity=false){
@@ -8218,7 +8231,7 @@ function assetStatisticsDashboardR79(){
  const kpis=[['资产文件总数',t.files,'份'],['资产文件总容量',assetStatisticsSizeR79(t.bytes),''],['本月新增资料',t.newFiles,'份'],['移交记录数',t.relationships,'条'],['同步成功文件数',t.success??'—','份']];
  const projectPanel=station?refPanel('目录资料分布',assetStatisticsBarsR79(s.directories)):refPanel('各项目资产数量',refChart(s.projectRows,[{name:'资料数量',color:'#6281ed',get:r=>r.files}],'份'));
  const rank=[...s.projectRows].sort((a,b)=>b.bytes-a.bytes).slice(0,5);
- return `<div class="nm-head"><h1>数字资产统计</h1>${btn('查看资料归档','go-assets')}</div>${refModes()}<div class="as79-scope">${selector}<span>${station?'单项目统计':'全部授权项目统计'} · ${s.date}</span></div><div class="ref-dashboard" data-ref-dashboard="assets">${refKpis(kpis)}<div class="ref-grid">${projectPanel}${refPanel('资料来源分布',refAssetTypeChart(s.sources))}${refPanel('资料新增趋势',assetStatisticsTrendR79(s))}${refPanel(station?'文件类型分布':'当前资产容量 TOP5',station?refAssetTypeChart(s.types):assetStatisticsBarsR79(rank.map(r=>[r.p.name,r.bytes]),'',true))}${refPanel('新增移交记录趋势',assetStatisticsTrendR79(s,true))}${refPanel('计划移交安排',s.plans.length?`<div class="as79-plans">${s.plans.map(p=>`<div><time>${esc(p.date)}</time><strong>${esc(p.name)}</strong>${!station?'<small>'+esc(list.find(x=>x.id===p.project)?.name||'')+'</small>':''}</div>`).join('')}</div>`:'<div class="nm-empty">暂无已配置计划移交时间的记录</div>')}</div><p class="nm-note">资料按项目与资产标识去重；容量按文件台账大小汇总；新增按资料创建时间统计。移交记录数按已提交记录计数，增量同步不重复计数。同步成功仅统计档案系统 SUCCESS 回执中的文件，浏览器同步演示不计入业务成功数。未接入正式回执显示 —。</p></div>`;
+ return `<div class="nm-head"><h1>数字资产统计</h1>${btn('查看资料归档','go-assets')}</div>${refModes()}<div class="as79-scope">${selector}<span>${station?'单项目统计':'全部授权项目统计'} · ${s.date}</span></div><div class="ref-dashboard" data-ref-dashboard="assets">${refKpis(kpis)}<div class="ref-grid">${projectPanel}${refPanel('资料来源分布',refAssetTypeChart(s.sources))}${refPanel('资料新增趋势',assetStatisticsTrendR79(s))}${refPanel(station?'文件格式分布':'当前资产容量 TOP5',station?refAssetTypeChart(s.types,'文件格式分布'):assetStatisticsBarsR79(rank.map(r=>[r.p.name,r.bytes]),'',true))}${refPanel('新增移交记录趋势',assetStatisticsTrendR79(s,true))}${refPanel('计划移交安排',s.plans.length?`<div class="as79-plans">${s.plans.map(p=>`<div><time>${esc(p.date)}</time><strong>${esc(p.name)}</strong>${!station?'<small>'+esc(list.find(x=>x.id===p.project)?.name||'')+'</small>':''}</div>`).join('')}</div>`:'<div class="nm-empty">暂无已配置计划移交时间的记录</div>')}</div><p class="nm-note">资料按项目与资产标识去重；容量按文件台账大小汇总；新增按资料创建时间统计。移交记录数按已提交记录计数，增量同步不重复计数。同步成功仅统计档案系统 SUCCESS 回执中的文件，浏览器同步演示不计入业务成功数。未接入正式回执显示 —。</p></div>`;
 }
 refAssetDashboard=assetStatisticsDashboardR79;
 renderAssetDashboard=assetStatisticsDashboardR79;
