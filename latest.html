@@ -7932,13 +7932,17 @@ open=function(m,sub){if(m==='progress'){window.wrsOverview?.open('dashboard');re
 
 /* WRS_ARCHIVE_DIRECTORY_R71_BEGIN */
 /* One handover binding per project directory. Local preview adapter; no real archive network. */
+// A transferable directory must exist, belong to the asset project and have a valid parent path.
+function archiveTransferDirectory(id,pid){let d=assetDir(id),first=d;const seen=new Set();while(d){if(seen.has(d.id)||(d.project&&d.project!==pid))return null;seen.add(d.id);if(!d.parent)return first;d=assetDir(d.parent)}return null}
+function archiveLinkedDirectory(a){if(!a?.project)return null;if(!String(a.source||'').trim()&&!archiveTransferDirectory(a.dir,a.project))return null;const previous=project;try{project=a.project;return archiveTransferDirectory(assetPrimaryDirId(a),a.project)}finally{project=previous}}
+function archiveRequireLinkedItems(t){const items=transferRecordItems(t);if(items.some(a=>!archiveLinkedDirectory({...a,project:a.project||t.project})||a.dirPath?.includes('未关联目录')))throw Error('移交记录包含未关联目录的资料，请先完成目录关联并重新提交移交记录')}
 function archiveBindingDirs(t){return t.directoryBindings||t.dirIds||[]}
 function archiveDirContains(root,id){return root===id||descendants(root).has(id)}
 function archiveDirOverlap(a,b){return archiveDirContains(a,b)||archiveDirContains(b,a)}
 function archiveDirOwner(id,pid,exclude){return data.transfers.find(t=>t.project===pid&&t.id!==exclude&&archiveBindingDirs(t).some(root=>archiveDirOverlap(root,id)))}
 function archiveBindingSelection(){return transferFormState?(transferFormState.bindingSelection||=(new Set())):new Set()}
-function archiveBoundAsset(t,a){return a.project===t.project&&archiveBindingDirs(t).some(root=>archiveDirContains(root,assetPrimaryDirId(a)))}
-function archiveBindingSnapshot(a){const d=assetDir(assetPrimaryDirId(a));return {...clone(a),directoryName:d?.name||'',dirPath:d?assetDirPathNames(d.id):['未关联目录']}}
+function archiveBoundAsset(t,a){const d=archiveLinkedDirectory(a);return !!d&&a.project===t.project&&archiveBindingDirs(t).some(root=>archiveTransferDirectory(root,t.project)&&archiveDirContains(root,d.id))}
+function archiveBindingSnapshot(a){const d=archiveLinkedDirectory(a);if(!d)throw Error('未关联目录的资料不可移交');return {...clone(a),directoryName:d?.name||'',dirPath:d?assetDirPathNames(d.id):['未关联目录']}}
 function archiveMigrateBindings(){
  let changed=false;const claimed=[];
  for(const t of data.transfers.slice().sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''))){
@@ -7951,9 +7955,9 @@ function archiveMigrateBindings(){
  }
  if(changed)save();return changed;
 }
-function archiveBindingSyncSelection(){transferSelection.clear();const roots=archiveBindingSelection();for(const a of scopeAssets())if([...roots].some(root=>archiveDirContains(root,assetPrimaryDirId(a))))transferSelection.add(a.id)}
+function archiveBindingSyncSelection(){transferSelection.clear();const roots=archiveBindingSelection();for(const a of transferAssets())if([...roots].some(root=>archiveDirContains(root,assetPrimaryDirId(a))))transferSelection.add(a.id)}
 // Retain files in the tree for context, including already-bound folders. Selection is directory-only.
-transferAssets=function(){return scopeAssets()};
+transferAssets=function(){return scopeAssets().filter(a=>!!archiveLinkedDirectory(a))};
 const bindingTreeBefore=transferTreeRowsMarkup;
 transferTreeRowsMarkup=function(){return bindingTreeBefore()};
 const bindingUpdateBefore=updateTransferSelectionUI;
@@ -7963,7 +7967,7 @@ updateTransferSelectionUI=function(){
  const roots=archiveBindingSelection();
  document.querySelectorAll('#nm-transfer-table [data-transfer-dir]').forEach(cb=>{
   const id=cb.dataset.transferDir,owner=archiveDirOwner(id,project,transferFormState.id);
-  cb.disabled=!!owner||id==='__unassigned';cb.checked=[...roots].some(root=>archiveDirContains(root,id));
+  cb.disabled=!!owner||!archiveTransferDirectory(id,project);cb.checked=[...roots].some(root=>archiveDirContains(root,id));
   cb.indeterminate=!cb.checked&&[...roots].some(root=>archiveDirContains(id,root));
   cb.title=owner?'此目录已建立移交关系，不可重复选择':id==='__unassigned'?'请先将文件归入目录':'选择目录及全部下级目录';
   const cell=cb.closest('td');cell?.querySelector('.ar-binding-badge')?.remove();
@@ -7978,7 +7982,7 @@ document.addEventListener('change',e=>{
  const cb=e.target;if(!cb.matches('#nm-transfer-all,[data-transfer-dir],[data-transfer-file]'))return;
  e.stopImmediatePropagation();const roots=archiveBindingSelection();
  if(cb.matches('[data-transfer-file]')){updateTransferSelectionUI();return}
- const choose=(id,on)=>{if(id==='__unassigned'||archiveDirOwner(id,project,transferFormState.id))return;
+ const choose=(id,on)=>{if(!archiveTransferDirectory(id,project)||archiveDirOwner(id,project,transferFormState.id))return;
   if(on){if([...roots].some(root=>archiveDirContains(root,id)))return;for(const root of [...roots])if(archiveDirContains(id,root))roots.delete(root);roots.add(id)}
   else{for(const root of [...roots])if(archiveDirOverlap(id,root))roots.delete(root)}
  };
@@ -7988,19 +7992,19 @@ document.addEventListener('change',e=>{
  updateTransferSelectionUI();
 },true);
 const bindingFormBefore=renderTransferFormPage;
-renderTransferFormPage=function(){archiveMigrateBindings();const t=data.transfers.find(t=>t.id===transferFormState?.id);const html=bindingFormBefore();return html.replace('勾选目录将包含下级文件。已同步或正在同步的相同文件版本不再列出；提交仅保存移交记录，返回列表后点击“同步”。','一个目录只能建立一条移交关系，包含全部下级目录；已移交目录不可重复选择。提交后首次点击“同步”，后续新增文件自动归入原记录并增量同步。').replace('<div class="nm-transfer-meta">','<div class="nm-transfer-meta">'+field('计划移交时间','plannedTransferAt',t?.plannedTransferAt||'','date',true))};
+renderTransferFormPage=function(){archiveMigrateBindings();const t=data.transfers.find(t=>t.id===transferFormState?.id);const html=bindingFormBefore();return html.replace('勾选目录将包含下级文件。已同步或正在同步的相同文件版本不再列出；提交仅保存移交记录，返回列表后点击“同步”。','一个目录只能建立一条移交关系，包含全部下级目录；已移交目录不可重复选择。未关联目录的资料需先完成目录关联后才能移交。提交后首次点击“同步”，后续新增文件自动归入原记录并增量同步。').replace('<div class="nm-transfer-meta">','<div class="nm-transfer-meta">'+field('计划移交时间','plannedTransferAt',t?.plannedTransferAt||'','date',true))};
 submitTransferForm=async function(){
  const form=document.querySelector('#nm-transfer-form');if(!form||!form.reportValidity())return;
  const fd=new FormData(form),content=String(fd.get('content')||'').trim(),plannedTransferAt=String(fd.get('plannedTransferAt')||'');if(!plannedTransferAt)throw Error('请选择计划移交时间');if(!String(fd.get('target')||'').trim())throw Error('移交对象不能为空');if(!content)throw Error('请填写移交说明');
  if(transferFormState.id)throw Error('已提交的目录绑定不可修改，请在原记录查看同步结果');
  const roots=[...archiveBindingSelection()];if(!roots.length)throw Error('请至少选择一个可移交目录');
- if(roots.some(id=>!assetDir(id)||archiveDirOwner(id,project)))throw Error('目录已被其他移交记录绑定，请重新选择');
- const items=data.assets.filter(a=>a.project===project&&roots.some(root=>archiveDirContains(root,assetPrimaryDirId(a)))).map(archiveBindingSnapshot);
+ if(roots.some(id=>!archiveTransferDirectory(id,project)||archiveDirOwner(id,project)))throw Error('目录已被其他移交记录绑定，请重新选择');
+ const items=transferAssets().filter(a=>roots.some(root=>archiveDirContains(root,archiveLinkedDirectory(a).id))).map(archiveBindingSnapshot);
  const at=stamp(),t={id:uid('transfer'),project,target:'档案系统',content,plannedTransferAt,assetIds:items.map(a=>a.id),items,dirIds:roots,directoryBindings:roots,bindingCreatedAt:at,creator:actorName(),createdAt:at,submittedAt:at,updatedAt:at,archiveAutoEnabled:false};
  t.archiveCode=archiveCode(t);data.transfers.push(t);transferFormState=null;transferSelection.clear();persist('目录已绑定至本移交记录。首次点击“同步”后启用自动增量同步。');
 };
 const bindingBeginBefore=archiveBegin;
-archiveBegin=function(t,outcome){bindingBeginBefore(t,outcome);t.archiveAutoEnabled=true;t.archiveAutoEnabledAt||=stamp();save()};
+archiveBegin=function(t,outcome){archiveRequireLinkedItems(t);bindingBeginBefore(t,outcome);t.archiveAutoEnabled=true;t.archiveAutoEnabledAt||=stamp();save()};
 function archiveBindingIncrement(){
  archiveMigrateBindings();
  let changed=false;
