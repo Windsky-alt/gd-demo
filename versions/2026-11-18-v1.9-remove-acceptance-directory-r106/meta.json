@@ -1,0 +1,10 @@
+{
+  "version": "1.9",
+  "date": "2026-11-18",
+  "note": "删除验收管理下的「验收目录树」入口：菜单仅保留阶段性验收、专项验收、竣工验收、竣工资料管理，默认进入阶段性验收。",
+  "source": "平台演示-V1.9.html",
+  "htmlFile": "平台演示-V1.9.html",
+  "docx": "",
+  "publishedAt": "2026-11-18 14:40",
+  "revision": "remove-acceptance-directory-r106"
+}
