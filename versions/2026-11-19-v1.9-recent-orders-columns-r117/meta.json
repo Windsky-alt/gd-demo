@@ -1,0 +1,10 @@
+{
+  "version": "1.9",
+  "date": "2026-11-19",
+  "note": "项目总览看板（台站/局端）：近期整改单表头改为 整改单号、检查项、问题描述、检查时间、检查人、整改人、操作；原「状态」列移除。",
+  "source": "平台演示-V1.9.html",
+  "htmlFile": "平台演示-V1.9.html",
+  "docx": "",
+  "publishedAt": "2026-11-19 19:24",
+  "revision": "recent-orders-columns-r117"
+}
