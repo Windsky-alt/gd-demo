@@ -8496,7 +8496,7 @@ const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'
 const org=()=>({role:localStorage.getItem('projectDeclarationRole')||'station',name:localStorage.getItem('projectDeclarationOrg')||'大湾区发射台'});
 const bureau=()=>org().role==='bureau';
 const LEVELS=['','一级','二级','三级','四级','五级'];
-const MAXLEVEL=5;
+const MAXLEVEL=3;
 
 const entry=[...document.querySelectorAll('.global-item')].find(n=>n.textContent.trim()==='勘察设计');
 if(!entry)return;
@@ -8767,6 +8767,7 @@ function renderPlan(){
 function renderFill(mode){
   const n=nodesOf().find(x=>x.id===fillId);
   if(!n){screen='list';return renderList()}
+  if(hasKids(n.id,nodesOf()))return renderDetail(n);
   if(mode==='detail'||!permitCanWrite())return renderDetail(n);
   page.innerHTML=`<form id="pm-fill" class="pm-card pm-form">
     ${title('进度填报 · '+n.name,'list')}
@@ -8910,6 +8911,7 @@ function validatePlan(arr){
   for(let i=0;i<flat.length;i++){
     const raw=arr.find(x=>x.id===flat[i].id);
     if(!raw)continue;
+    if(flat[i].level>MAXLEVEL)return '「'+(raw.name||'未命名事项')+'」：事项等级最多 '+MAXLEVEL+' 级，请调整层级';
     if(!raw.name)return '第 '+(i+1)+' 行：请填写事项名称';
     if(!raw.owner)return '「'+raw.name+'」：请填写责任人';
     if(!raw.planStart||!raw.planEnd)return '「'+raw.name+'」：请选择计划开始与结束日期';
@@ -9070,7 +9072,7 @@ page.addEventListener('click',async e=>{
       focusName(nid);
       return;
     }
-    else if(a==='add-inline'){const nid=addNode(id);render();focusName(nid);return}
+    else if(a==='add-inline'){const p=plan.find(x=>x.id===id);if(p&&levelOf(p.id,plan)>=MAXLEVEL)return error('事项等级最多 '+MAXLEVEL+' 级，当前事项已无法再新增下级');const nid=addNode(id);render();focusName(nid);return}
     else if(a==='del-inline'){
       const n=plan.find(x=>x.id===id);
       if(!n)return;
@@ -9188,6 +9190,7 @@ page.addEventListener('submit',async e=>{
     if(!permitCanWrite())return;
     const n=nodesOf().find(x=>x.id===fillId);
     if(!n)return;
+    if(hasKids(n.id,nodesOf()))return error('仅最末级事项可填报进度');
     const f=e.target,get=k=>String(new FormData(f).get(k)||'').trim();
     const rec={...n,actualStart:get('actualStart'),actualEnd:get('actualEnd'),issuer:get('issuer'),code:get('code'),validTo:get('validTo'),note:get('note')};
     if(!rec.actualStart)return error('请填写实际开始日期');
