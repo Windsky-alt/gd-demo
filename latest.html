@@ -9398,8 +9398,8 @@ window.wrsProcurement={openProject:async id=>{await open();pid=id;screen='list';
 .ov-parallel-head h4{margin:0;font-size:16px;font-weight:600;color:#1f2d3d}
 .ov-parallel-head span{font-size:12.5px;color:#8a97ab}
 .ov-parallel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
-.ov-pcard{display:flex;flex-direction:column;gap:16px;text-align:left;padding:20px 22px;background:#fff;border:1px solid #e6ebf5;border-radius:8px;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
-.ov-pcard:hover{border-color:#c7d6f4;box-shadow:0 6px 18px rgba(38,74,140,.09);transform:translateY(-1px)}
+.ov-pcard{display:flex;flex-direction:column;gap:16px;text-align:left;padding:20px 22px;background:#fff;border:1px solid #e6ebf5;border-radius:8px;cursor:default;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
+.ov-pcard:hover{border-color:#e6ebf5;box-shadow:none;transform:none}
 .ov-pcard-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ov-pcard-name{font-size:17px;font-weight:600;color:#1f2d3d;letter-spacing:.2px}
 .ov-pcard-kpis{display:flex;align-items:flex-end;gap:34px}
@@ -9517,7 +9517,7 @@ function milestones(d){
     <div class="ov-parallel-grid">${d.summaries.map(g=>{
       const w=warnOf(g),pct=g.count?Math.round(g.done/g.count*100):0;
       const cls=g.status==='已完成'?'is-done':g.status==='进行中'?'is-running':'';
-      return `<button type="button" class="ov-pcard ${cls}" data-ov="group" data-id="${g.group}">
+      return `<div class="ov-pcard ${cls}">
         <div class="ov-pcard-top"><span class="ov-pcard-name">${E(g.name)}</span>${status(g.status)}</div>
         <div class="ov-pcard-kpis">
           <div class="ov-pcard-kpi"><b>${g.done}</b><i>/${g.count}</i><span>已完成事项</span></div>
@@ -9528,7 +9528,7 @@ function milestones(d){
           <div><span>计划</span><b>${E(g.start||'—')}</b><em>至</em><b>${E(g.end||'—')}</b></div>
           <div><span>实际</span><b>${E(g.actualStart||'—')}</b><em>至</em><b>${E(g.actualEnd||'—')}</b></div>
         </div>
-      </button>`;
+      </div>`;
     }).join('')}</div>
   </div>`;
 }
@@ -9688,7 +9688,6 @@ if(a==='prev-project'||a==='next-project'){const ps=projects(),i=ps.findIndex(p=
 if(a==='warning'){warningType=id;warnPage=1}else if(a==='warn-prev')warnPage=Math.max(1,warnPage-1);else if(a==='warn-next')warnPage++;
 else if(a==='toggle'){collapsed.has(id)?collapsed.delete(id):collapsed.add(id);updatePlan();return}
 else if(a==='expand'||a==='collapse'){collapsed=a==='expand'?new Set():new Set(['g0','g1','g2']);updatePlan();return}
-else if(a==='group'){sourceFilter=id;updatePlan();return}
 else if(a==='source'||a==='warning-source'){const w=a==='warning-source'?selectedWarning(id):null,g=w?w.node.group:Number(id),p=w?w.project.id:pid;markReturn();leave();[window.wrsPermit,window.wrsProcurement,window.wrsMasterPlan][g].openProject(p);return}
 else if(['order','global-order','warning-order','node-order'].includes(a)){if(!bureau())return;let target=pid,context;if(a==='global-order')target=projects()[0]?.id;if(a==='warning-order'){const w=selectedWarning(id);if(!w)return;target=w.project.id;context={id:w.id,type:w.type,name:w.node.name,description:w.description,example:!!w.example}}if(a==='node-order'){const d=data(projects().find(p=>p.id===pid)),n=[...d.summaries,...d.nodes].find(n=>n.id===id);context=n?{id:n.id,type:'计划安排检查',name:n.name,description:groups[n.group]+'：'+n.name}:null}markReturn();leave();api().overviewOrder(target,context);return}
 else if(a==='supervision'||a==='assets'){markReturn();leave();api().open(a==='assets'?'assets':'supervision');return}
