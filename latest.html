@@ -8543,10 +8543,7 @@ function drop(id){return new Promise((res,rej)=>{const tx=db.transaction('nodes'
 const projects=()=>window.wrsProjectAssets?.permitProjects?.()||[];
 const project=()=>projects().find(p=>p.id===pid);
 function permitCanWrite(){
- const p=project();if(!p)return false;if(!bureau())return true;
- const record=(()=>{try{return JSON.parse(localStorage.getItem('projectDeclarationRecords')||'[]').find(r=>(r.code||r.id)===p.id)||{}}catch{return {}}})();
- const station=String(p.station||record.station||'').trim();
- return /^(JG|JGX)/i.test(p.id)||['局管项目','局属机关','局机关','局本级','国家广播电视总局无线电台管理局'].includes(station)||[p.managementType,p.projectLevel,record.managementType,record.projectLevel].includes('局管项目');
+ return !!project();
 }
 
 const nodesOf=(p=pid)=>rows.filter(r=>r.project===p);
@@ -8724,7 +8721,7 @@ function renderList(){
       <td>${esc(n.owner||'—')}</td>
       <td>${parent?'<span class="pm-muted">—</span>':stateBadge(n)}</td>
       <td>${n.actualStart||'—'}</td><td>${n.actualEnd||'—'}</td>
-      <td class="pm-ops">${parent?'<span class="pm-muted">—</span>':(!permitCanWrite()?link('详情','detail',n.id):link('进度填报','fill',n.id)+link('编辑','edit',n.id))}</td></tr>`;
+      <td class="pm-ops">${parent?'<span class="pm-muted">—</span>':(!permitCanWrite()?link('详情','detail',n.id):(n.actualEnd?link('详情','detail',n.id):link('进度填报','fill',n.id))+link('编辑','edit',n.id))}</td></tr>`;
   }).join('');
   page.innerHTML=`<div class="pm-card">${head}
     <div class="pm-filter">
@@ -8860,13 +8857,13 @@ function renderVersions(){
       <td>${esc(v.operator||'—')}</td>
       <td>${esc(String(v.createdAt||'').replace('T',' ').slice(0,16))}</td>
       <td>${esc(v.note||'—')}</td>
-      <td>${v.type==='新增'?`共 ${(v.snapshot||[]).length} 个事项`:`新增 ${v.counts?.added||0} / 修改 ${v.counts?.updated||0} / 删除 ${v.counts?.removed||0}`}</td>
+
       <td class="pm-ops">${link('查看明细','version',v.id)}</td></tr>`).join('');
   page.innerHTML=`<div class="pm-card">${title('计划列表 · '+(project()?.name||''),'list')}
     <div class="pm-toolbar"><span class="pm-muted">共 ${actual.length} 个计划版本${actual.length?'，最新 V'+Math.max(...actual.map(v=>v.version)):''}${example?'；另附 1 条变更示例':''}</span>
       <span>${!permitCanWrite()?'':button('变更计划','plan-start','',true)}</span></div>
-    ${table(['版本','类型','编制人','编制时间','变更说明','变更摘要','操作'],body)}
-    <p class="pm-hint">每次保存计划生成一个版本；变更版本逐条记录新增、修改、删除的事项，并保留当时的计划快照。</p></div>`;
+    ${table(['版本','类型','编制人','编制时间','变更说明','操作'],body)}
+    <p class="pm-hint">每次保存计划生成一个版本，并保留当时的计划快照。</p></div>`;
 }
 
 function renderVersionDetail(){
@@ -8893,9 +8890,6 @@ function renderVersionDetail(){
       <div><span>编制时间</span>${esc(String(v.createdAt||'').replace('T',' ').slice(0,16))}</div>
       <div><span>事项数</span>${snap.length} 个</div>
     </div>
-    <h3>变更说明</h3>
-    <p>${esc(v.note||'—')}</p>
-    ${v.type==='变更'?`<h3>变更清单</h3>${table(['操作类型','节点号','事项名称','原责任人','新责任人','原计划时间','新计划时间'],changeBody)}`:''}
     <h3>计划快照</h3>
     ${table(['节点号','事项名称','事项等级','责任人','计划开始','计划结束','工期（天）'],snapBody)}
     <p class="pm-hint">快照为该版本保存时的计划内容，后续变更不影响历史版本。</p></div>`;
@@ -9575,7 +9569,7 @@ function assetCount(ds,title='各项目数字资产数量'){return card(title,pl
 function assetCapacity(ds){const rs=ds.map(x=>({name:x.p.name,bytes:sum(x.d.assets.filter(a=>!a.createdAt||a.createdAt.slice(0,4)<=capacityYear),'bytes')})).sort((a,b)=>b.bytes-a.bytes).slice(0,10),max=Math.max(1,...rs.map(r=>r.bytes));return card('数字资产容量 TOP10',`<div class="ov-capacity-rank">${rs.map((r,i)=>`<div ${tipAttr(r.name,[{label:"数字资产容量",value:byteSize(r.bytes),color:palette[0]},{label:"排名",value:"第 "+(i+1)+" 名"},{label:"统计截止",value:capacityYear+"年末"}])}><em>${i+1}</em><span title="${E(r.name)}">${E(r.name)}</span><div><i style="width:${r.bytes/max*100}%"></i></div><b>${byteSize(r.bytes)}</b></div>`).join('')||'<div class="ov-empty">暂无数据</div>'}</div>`,yearControl('ov-capacity-year',capacityYear))}
 function transferChart(ds){return card('资产移交统计',plot(ds.map(x=>x.p.name),[{name:'移交批次',values:ds.map(x=>x.d.transfers.filter(t=>(t.createdAt||t.start||'').startsWith(transferYear)).length)}],'批',false,false,ds.length>1),yearControl('ov-transfer-year',transferYear))}
 function issuedAt(o){const raw=o.history?.find(h=>h.action==='下发整改单')?.at||o.createdAt||o.checkedAt||'';if(/[zZ]$|[+-]\d{2}:\d{2}$/.test(raw)&&Number.isFinite(Date.parse(raw)))return new Date(raw).toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'});return raw.replace('T',' ').slice(0,19)}
-function recentOrders(orders,station=false){const list=orders.filter(o=>issuedAt(o)&&issuedAt(o).slice(0,10)<=now()).slice().sort((a,b)=>issuedAt(b).localeCompare(issuedAt(a))||String(b.id).localeCompare(String(a.id))).slice(0,5);return card('近期整改单',T(['整改单号','检查项','问题描述','检查时间','检查人','整改人','操作'],list.map(o=>`<tr><td>${E(o.code||'—')}</td><td>${E(o.checkItem||'—')}</td><td>${E(o.description||'—')}</td><td>${E(o.checkedAt||issuedAt(o)||'—')}</td><td>${E(o.inspector||'—')}</td><td>${E(o.rectifier||'—')}</td><td>${L('查看','recent-order',o.id)}</td></tr>`).join('')),B('查看全部','supervision'))}
+function recentOrders(orders,station=false){const list=orders.filter(o=>issuedAt(o)&&issuedAt(o).slice(0,10)<=now()).slice().sort((a,b)=>issuedAt(b).localeCompare(issuedAt(a))||String(b.id).localeCompare(String(a.id))).slice(0,5);return card('近期整改单',T(['整改单号','检查项','问题描述','检查时间','检查人','整改人','状态','操作'],list.map(o=>`<tr><td>${E(o.code||'—')}</td><td>${E(o.checkItem||'—')}</td><td>${E(o.description||'—')}</td><td>${E(o.checkedAt||issuedAt(o)||'—')}</td><td>${E(o.inspector||'—')}</td><td>${E(o.rectifier||'—')}</td><td>${status(o.status)}</td><td>${L('查看','recent-order',o.id)}</td></tr>`).join('')),B('查看全部','supervision'))}
 function bureauPage(){const ds=projects().map(p=>({p,d:data(p)})),ws=ds.flatMap(x=>x.d.warnings),orders=ds.flatMap(x=>x.d.orders),assets=ds.flatMap(x=>x.d.assets);const counts=ds.map(({p})=>sampleFor(p)),safetyOpen=sum(counts,'safeOpen'),qualityOpen=sum(counts,'qualOpen');return `<div id="ov-global-charts">${metrics([['项目总数',ds.length,'个'],['数字资产数量',assets.length,'份'],['数字资产容量',byteSize(sum(assets,'bytes')),''],['待处理监管单',orders.filter(o=>o.status!=='已复查').length,'单'],['未闭环问题数',demo?safetyOpen+qualityOpen:'—','个',demo?'安全问题 '+safetyOpen+' 个\n质量问题 '+qualityOpen+' 个':'安全问题 —\n质量问题 —']])}<div class="ov-grid ov-grid-wide">${rectificationColumns(ds)}${card('项目类型分布',ring(['新建','改建','扩建','技术改造'].map(t=>[t,ds.filter(x=>x.p.type===t).length]),'项目','个'))}</div><div class="ov-grid">${assetCount(ds)}${projectAssetTrend({assets},'全部授权项目')}</div><div class="ov-grid ov-super-grid">${supervisionPanel(orders)}${recentOrders(orders)}</div></div>`}
 function showDialog(title,body){overviewDialog.innerHTML=`<header><h3>${E(title)}</h3>${B('×','close-dialog')}</header><div class="ov-dialog-body">${body}</div><footer>${B('关闭','close-dialog')}</footer>`;overviewDialog.showModal()}
 function warningDetails(projectId){const p=projects().find(p=>p.id===projectId);if(!p)return;const d=data(p);showDialog(p.name+' · 进度预警',T(['计划来源','事项名称','预警类型','偏差天数','责任人','操作'],d.warnings.map(w=>`<tr><td>${groups[w.node.group]}</td><td>${E(w.node.name)}</td><td>${E(w.type+' · '+w.part)}</td><td>${w.num} 天</td><td>${E(w.node.owner||'—')}</td><td>${bureau()?L('下发整改单','dialog-order',w.id)+'<input type="hidden" value="'+E(p.id)+'">':''}</td></tr>`).join('')))}
