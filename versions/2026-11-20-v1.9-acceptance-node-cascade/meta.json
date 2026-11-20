@@ -1,0 +1,10 @@
+{
+  "version": "1.9",
+  "date": "2026-11-20",
+  "note": "删除验收节点时一并删除下级节点及关联验收记录和附件",
+  "source": "平台演示-V1.9.html",
+  "htmlFile": "平台演示-V1.9.html",
+  "docx": "",
+  "publishedAt": "2026-11-20 15:45",
+  "revision": "acceptance-node-cascade"
+}
