@@ -9839,7 +9839,7 @@ const overviewSpecs=[
  ['investmentDesign','设计总投资（万元）','sourceMoney'],['investmentActual','实际总投资（万元）','money',true],
  ['capacityName','能力（效益）名称','text'],['capacityDesign','新增生产能力（设计）','text'],['capacityActual','新增生产能力（实际）','text'],
  ['planStart','设计开工日期','sourceDate'],['planFinish','设计完工日期','sourceDate'],['start','实际开工日期','date',true],['finish','实际完工日期','date',true],
- ...expenditure.flatMap(([key,label])=>[[key+'Approved',label+'／概算批准金额（万元）','money',true],[key+'Actual',label+'／实际完成金额（万元）','money']]),
+ ...expenditure.flatMap(([key,label])=>[[key+'Approved',label+'／概算批准金额（万元）','money',true],[key+'Actual',label+'／实际完成金额（万元）','money',false,true]]),
  ['expenseApprovedTotal','基建支出概算批准金额合计（万元）','computed'],['expenseActualTotal','基建支出实际完成金额合计（万元）','computed'],
  ['expenseNote','基建支出备注','note'],['submittedAt','提交时间','computed'],
 ];
@@ -9916,7 +9916,7 @@ function renderOverview(){
   <h3>占地面积与总投资</h3><div class="fa-grid fa-overview-four">${overviewField('landDesign')}${overviewField('landActual')}${overviewField('investmentDesign')}${overviewField('investmentActual',null,actualInvestmentValue(draft))}</div>
   <h3>新增生产能力</h3><div class="fa-grid">${overviewField('capacityName')}${overviewField('capacityDesign','设计')}${overviewField('capacityActual','实际')}</div>
   <h3>建设起止时间</h3><div class="fa-grid fa-overview-four">${overviewField('planStart')}${overviewField('planFinish')}${overviewField('start')}${overviewField('finish')}</div>
-  <h3>基建支出</h3>${detail?'':'<p class="fa-muted">各项概算批准金额必填，无金额填 0。实际完成金额按发生项填写，合计须大于 0。</p>'}${expenditureMarkup()}${overviewField('expenseNote')}
+  <h3>基建支出</h3>${detail?'':'<p class="fa-muted">各项概算批准金额必填，无金额填 0。实际完成金额至少填写一项，无金额可填 0，合计允许为 0。</p>'}${expenditureMarkup()}${overviewField('expenseNote')}
   <h3>${requiredMark(true)}完成主要工程量</h3>${detail?'':'<p class="fa-muted">至少填写一行工程量明细。</p>'}${quantityMarkup(detail)}
   <h3>${requiredMark(true)}尾工工程</h3>${detail?'':'<p class="fa-muted">至少填写一行。没有尾工时，在“单项工程项目、内容”填写“无尾工”。</p>'}${linesMarkup('tails',tailsSpec,'尾工工程')}
   <h3>${requiredMark(true)}决算附件</h3>${detail?'':'<p class="fa-muted">请上传竣工财务决算报表、竣工财务决算审核表等决算材料，至少上传一个文件，可一次选择多个文件。</p>'}${filesMarkup()}${detail?`<p class="fa-muted">提交时间：${E(draft.submittedAt)}</p>`:''}
@@ -9943,7 +9943,7 @@ function changeOverviewRows(action,id){
  if(action==='add-line')rows.push({});else rows.splice(Number(index),1);
  const scroll=page.scrollTop;renderForm();page.scrollTop=scroll;
 }
-function overviewIssues(r){
+function overviewIssues(r,importing=false){
  const errors=[];
  const check=(value,label,type,required)=>{
   const text=String(value??'').trim();
@@ -9953,7 +9953,7 @@ function overviewIssues(r){
   if(type==='money'&&moneyInput(text)===null)errors.push(label+'须为非负数，最多六位小数');
   if(type==='area'&&cents(text)===null)errors.push(label+'须为非负数，最多两位小数');
  };
- for(const [key,label,type,required] of overviewSpecs)if(type!=='computed'&&!isOverviewSource(type))check(r[key],label,type,required);
+ for(const [key,label,type,required,requiredOnImport] of overviewSpecs)if(type!=='computed'&&!isOverviewSource(type))check(r[key],label,type,required||(importing&&requiredOnImport));
  for(const [start,end,title] of [[r.planStart,r.planFinish,'设计'],[r.start,r.finish,'实际']])if(start&&end&&start>end)errors.push(title+'开工日期不得晚于完工日期');
  for(const kind of ['Approved','Actual']){
   const label=kind==='Approved'?'概算批准':'实际完成';
@@ -9961,7 +9961,7 @@ function overviewIssues(r){
   if(!Number.isSafeInteger(expenditureTotal(r,kind)))errors.push(label+'金额合计超出允许范围');
  }
  if(moneyInput(r.investmentActual)===0)errors.push('实际总投资须大于 0');
- if(expenditureTotal(r,'Actual')<=0)errors.push('基建支出实际完成金额合计须大于 0');
+ if(!importing&&!expenditure.some(([key])=>String(r[key+'Actual']??'').trim()))errors.push('请至少填写一项基建支出实际完成金额，无金额可填 0');
  for(const [key,title,specs] of [['quantities','完成主要工程量',quantitiesSpec],['tails','尾工工程',tailsSpec]]){
   const rows=r[key];
   if(!rows.some(hasRow))errors.push(key==='tails'?'请填写尾工工程，没有尾工时填写“无尾工”':'请填写至少一行完成主要工程量');
@@ -10074,25 +10074,20 @@ function workbook(sheets){
 }
 function parseXML(bytes){const d=new DOMParser().parseFromString(dec.decode(bytes),'application/xml');if(d.querySelector('parsererror'))throw Error('Excel XML 内容损坏');return d;}
 const tags=(d,n)=>[...d.getElementsByTagNameNS('*',n)];
-async function readWorkbook(bytes){const f=await unzip(bytes),wb=parseXML(f['xl/workbook.xml']),rr=parseXML(f['xl/_rels/workbook.xml.rels']),rels=Object.fromEntries(tags(rr,'Relationship').map(r=>[r.getAttribute('Id'),r.getAttribute('Target')])),shared=f['xl/sharedStrings.xml']?tags(parseXML(f['xl/sharedStrings.xml']),'si').map(s=>tags(s,'t').map(t=>t.textContent).join('')):[],out={};for(const s of tags(wb,'sheet')){const path=rels[s.getAttribute('r:id')],loc=path.startsWith('/')?path.slice(1):'xl/'+path.replace(/^\.\//,'');if(!f[loc])throw Error('Excel 工作表缺失');out[s.getAttribute('name')]=tags(parseXML(f[loc]),'row').map(r=>{let row=[];for(const c of tags(r,'c')){const ref=c.getAttribute('r')||'A1',ci=[...ref.replace(/\d/g,'')].reduce((v,l)=>v*26+l.charCodeAt(0)-64,0)-1,type=c.getAttribute('t'),v=tags(c,'v')[0]?.textContent||'';if(ci<0||ci>100)throw Error('Excel 列数超限');if(tags(c,'f').length)throw Error('导入表单不支持公式，请将公式转换为值后再导入');row[ci]=type==='inlineStr'?tags(c,'t').map(t=>t.textContent).join(''):type==='s'?shared[Number(v)]:v;}return row;});}return out;}
+const formulaCell=Symbol('Excel formula');
+async function readWorkbook(bytes){const f=await unzip(bytes),wb=parseXML(f['xl/workbook.xml']),rr=parseXML(f['xl/_rels/workbook.xml.rels']),rels=Object.fromEntries(tags(rr,'Relationship').map(r=>[r.getAttribute('Id'),r.getAttribute('Target')])),shared=f['xl/sharedStrings.xml']?tags(parseXML(f['xl/sharedStrings.xml']),'si').map(s=>tags(s,'t').map(t=>t.textContent).join('')):[],out={};for(const s of tags(wb,'sheet')){const path=rels[s.getAttribute('r:id')],loc=path.startsWith('/')?path.slice(1):'xl/'+path.replace(/^\.\//,'');if(!f[loc])throw Error('Excel 工作表缺失');out[s.getAttribute('name')]=tags(parseXML(f[loc]),'row').map(r=>{let row=[];for(const c of tags(r,'c')){const ref=c.getAttribute('r')||'A1',ci=[...ref.replace(/\d/g,'')].reduce((v,l)=>v*26+l.charCodeAt(0)-64,0)-1,type=c.getAttribute('t'),v=tags(c,'v')[0]?.textContent||'';if(ci<0||ci>100)throw Error('Excel 列数超限');row[ci]=tags(c,'f').length?formulaCell:type==='inlineStr'?tags(c,'t').map(t=>t.textContent).join(''):type==='s'?shared[Number(v)]:v;}return row;});}return out;}
 
 const limits={entries:3000,compressed:100*1024*1024,expanded:200*1024*1024};
 function cleanPath(name){const p=name.replace(/\\/g,'/').normalize('NFC');if(!p||p.includes('\0')||p.startsWith('/')||/^[a-z]:/i.test(p)||p.split('/').some(x=>x==='..'||x==='.'))throw Error('压缩包文件路径不合法：'+name);return p}
 async function unzip(data){const a=data instanceof Uint8Array?data:new Uint8Array(data);if(a.length<22||a.length>limits.compressed)throw Error('压缩包无效或超过 100 MB');const v=new DataView(a.buffer,a.byteOffset,a.byteLength);let end=a.length-22;while(end>=Math.max(0,a.length-65557)&&v.getUint32(end,true)!==0x06054b50)end--;if(end<0)throw Error('文件不是有效 ZIP / XLSX');if(v.getUint16(end+4,true)||v.getUint16(end+6,true))throw Error('不支持分卷 ZIP');const count=v.getUint16(end+10,true),directoryEnd=v.getUint32(end+16,true)+v.getUint32(end+12,true);if(count===65535||count>limits.entries||directoryEnd>end)throw Error('压缩包目录超限或损坏');let at=v.getUint32(end+16,true),expanded=0;const out=Object.create(null),seen=new Set();for(let i=0;i<count;i++){if(at+46>end||v.getUint32(at,true)!==0x02014b50)throw Error('压缩包目录损坏');const flags=v.getUint16(at+8,true),method=v.getUint16(at+10,true),compressed=v.getUint32(at+20,true),size=v.getUint32(at+24,true),nl=v.getUint16(at+28,true),el=v.getUint16(at+30,true),cl=v.getUint16(at+32,true),pos=v.getUint32(at+42,true),crcExpected=v.getUint32(at+16,true);if(flags&1)throw Error('不支持加密压缩包');if(at+46+nl+el+cl>directoryEnd||pos+30>a.length||compressed===0xffffffff||size===0xffffffff)throw Error('不支持 ZIP64 或目录损坏');let raw=a.slice(at+46,at+46+nl),name;try{name=new TextDecoder('utf-8',{fatal:true}).decode(raw)}catch{if(flags&2048)throw Error('ZIP 文件名编码无效');name=new TextDecoder('gb18030').decode(raw)}name=cleanPath(name);const key=name.toLocaleLowerCase();if(seen.has(key))throw Error('压缩包包含重复文件路径：'+name);seen.add(key);expanded+=size;if(expanded>limits.expanded)throw Error('解压后文件总量超过 200 MB');if(v.getUint32(pos,true)!==0x04034b50)throw Error('文件头损坏：'+name);const start=pos+30+v.getUint16(pos+26,true)+v.getUint16(pos+28,true);if(start+compressed>v.getUint32(end+16,true))throw Error('文件数据越界：'+name);let b=a.slice(start,start+compressed);if(method===8){const reader=new Blob([b]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader(),chunks=[];let length=0;for(;;){const r=await reader.read();if(r.done)break;length+=r.value.length;if(length>size||length>limits.expanded){await reader.cancel();throw Error('解压数据超过声明长度：'+name)}chunks.push(r.value)}b=new Uint8Array(length);let offset=0;for(const c of chunks){b.set(c,offset);offset+=c.length}}else if(method!==0)throw Error('不支持的 ZIP 压缩方式：'+name);if(b.length!==size||crc(b)!==crcExpected)throw Error('文件校验失败：'+name);if(!name.endsWith('/'))out[name]=b;at+=46+nl+el+cl}return out}
 const legacyLabels=new Map([['id','项目编号'],['projectName','项目名称'],['station','所属台站'],['constructionUnit','建设单位'],['projectType','建设性质'],['address','建设地点'],['start','实际开工日期'],['finish','实际竣工日期'],['accepted','竣工验收日期'],['conclusion','验收结论'],['area','实际建筑面积（㎡）'],['original','原批准概算（元）'],['approvalDate','概算批复日期'],['building','工程费用（元）'],['equipment','工程建设其他费用（元）'],['allocated','预备费（元）'],['other','其他投资（元）'],['total','送审决算总投资（元）'],['difference','较批准概算增减额（元）'],['description','决算说明／概算差异原因'],['funds','累计到位资金（元）'],['paid','累计已付款（元）'],['payable','应付款（元）'],['assetValue','交付使用资产总额（元）'],['receiver','资产接收单位'],['compilerUnit','编制单位'],['compiler','编制人'],['compiledDate','编制日期'],['financeLead','财务负责人'],['unitLead','单位负责人'],['submittedAt','提交时间']]);
 const importSheet='项目决算填报',exportSheet='项目概况表',quantitySheet='完成主要工程量',tailSheet='尾工工程';
-const importSpecs=overviewSpecs.filter(([, ,type])=>type!=='computed');
-const fileHeads=['项目编号','文件名称','文件路径'];
+const importSpecs=overviewSpecs.filter(([,,type])=>type!=='computed');
+const importFields=importSpecs.filter(([,,type])=>!isOverviewSource(type));
+const importHeaders=['项目编号',...importFields.map(spec=>spec[1])];
+const attachmentNamePattern=/^(.+?)[_-](\d+)(?:\..+)?$/;
 const isReadonly=type=>isOverviewSource(type)||type==='computed';
 function sourceValue(p,r,key){return key==='id'?p.id:key==='projectName'?p.name:r[key]??''}
-function sourceMatches(value,expected,type){
- const inputType=overviewInputType(type),source=String(expected).trim();
- if(inputType==='money'||inputType==='area'){
-  const parse=inputType==='money'?moneyInput:cents,amount=parse(inputValue(value,inputType));
-  return amount!==null&&amount===parse(inputValue(source,inputType));
- }
- return inputValue(value,inputType)===source;
-}
 function dateCell(v){if(/^\d{5}(\.\d+)?$/.test(v))return new Date(Date.UTC(1899,11,30)+Number(v)*86400000).toISOString().slice(0,10);return v.replace(/^(\d{4})[\/.](\d{1,2})[\/.](\d{1,2})$/,(_,y,m,d)=>`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`)}
 function filtered(){return eligible().filter(p=>(!query.name||[p.name,p.id].some(v=>v.toLowerCase().includes(query.name.toLowerCase())))&&(!query.status||state(p)===query.status))}
 function saveBlob(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),60000)}
@@ -10108,24 +10103,24 @@ function packageInstructions(template){
  return [
   ['项目','说明'],
   ['包结构','将决算表单.xlsx 和附件目录放在同一个 ZIP 中。可放入多份“决算表单-任意名称.xlsx”。'],
-  [template?importSheet:exportSheet,'每个项目填一行。灰色列由项目资料带出，红色星号标记必填列。若只导入部分项目，请删除主表中不需要导入的项目行。'],
+  [template?importSheet:exportSheet,'每个项目填一行，项目编号须与系统一致。其他灰色列以系统资料为准，表格中填入的值会被忽略。红色星号标记必填列。只导入部分项目时，请删除主表中不导入的项目行。'],
   ['实际数据','实际占地面积、实际总投资、实际开工日期和实际完工日期须填写。实际总投资须大于 0。'],
-  ['基建支出','各项概算批准金额必填，无金额填 0。实际完成金额按发生项填写，合计须大于 0。项目建设管理费计入待摊投资。'],
+  ['基建支出','各项概算批准金额和实际完成金额均必填，无金额填 0，基建支出合计允许为 0。项目建设管理费计入待摊投资。'],
   ['完成主要工程量','每个项目至少填写一行，按项目编号关联。可为同一个项目添加多行。'],
   ['尾工工程','每个项目至少填写一行。没有尾工时，在“单项工程项目、内容”填“无尾工”。'],
-  ['决算附件','每个项目至少提供一个文件。请附竣工财务决算报表、竣工财务决算审核表等材料。附件清单每个文件一行，填写相对 ZIP 根目录的路径。'],
-  ['附件路径示例','附件/项目编号/竣工财务决算报表.pdf。将其中的项目编号和文件名称换成实际值。'],
+  ['决算附件','每个项目至少提供一个文件。请附竣工财务决算报表、竣工财务决算审核表等材料。系统按文件名中的项目编号匹配，同一项目的附件序号须为不重复的正整数。'],
+  ['附件命名','使用“项目编号_序号.扩展名”，如 DEMO-ACCOUNTS-2026_01.pdf。项目编号以主表为准，第二个文件可用 _02。下划线也可用连字符。'],
   ['金额、面积与日期','金额单位为万元，最多六位小数。占地面积单位为㎡，最多两位小数。日期填写 YYYY-MM-DD，支持 Excel 日期值。'],
   ['提交','只可导入当前组织范围内未完成决算的项目。整包通过校验后一次提交，提交后状态为已完成。'],
   ['容量','单个 ZIP 不超过 100 MB，解压后不超过 200 MB。'],
-  ...(!template?[['历史数据','导出包含当前筛选的全部项目。旧版字段在历史决算工作表中，原附件一并导出。']]:[]),
+  ...(!template?[['历史数据','导出包含当前筛选的全部项目。旧版字段在历史决算工作表中，附件随包导出，以项目编号和序号命名。']]:[]),
  ];
 }
 const detailsHead=specs=>['项目编号',...specs.map(s=>s[1])];
 async function packageFor(ps,template=false){
  if(!ps.length)throw Error(template?'当前筛选范围没有未完成项目可生成模板':'当前筛选没有项目可导出');
  const specs=template?importSpecs:overviewSpecs,instructions=packageInstructions(template);
- const files=Object.create(null),manifest=[fileHeads],used=new Set(),overviewRows=[specs.map(s=>s[1])],quantityRows=[detailsHead(quantitiesSpec)],tailRows=[detailsHead(tailsSpec)],history=[['项目编号','旧版字段','保存值']];
+ const files=Object.create(null),overviewRows=[specs.map(s=>s[1])],quantityRows=[detailsHead(quantitiesSpec)],tailRows=[detailsHead(tailsSpec)],history=[['项目编号','旧版字段','保存值']];
  for(const p of ps){
   const saved=template?null:record(p.id),r=saved?.schema===overviewSchema?saved:empty(p);
   if(saved&&saved.schema!==overviewSchema){
@@ -10138,17 +10133,17 @@ async function packageFor(ps,template=false){
    for(const row of details)rows.push([p.id,...lineSpecs.map(([name])=>row[name]??'')]);
   }
   if(template)files[`附件/${p.id}/`]=new Uint8Array(0);
-  for(const f of saved?.files||[]){
+  for(const [index,f] of (saved?.files||[]).entries()){
    if(!(f.blob instanceof Blob))throw Error(p.id+' 的附件缺少文件内容：'+f.name);
-   const nameSafe=f.name.replace(/[\\/<>:"|?*\x00-\x1f]/g,'_');let name=`附件/${p.id}/${nameSafe}`,n=1;
-   while(used.has(name.toLocaleLowerCase()))name=`附件/${p.id}/${n++}_${nameSafe}`;
-   used.add(name.toLocaleLowerCase());files[name]=new Uint8Array(await f.blob.arrayBuffer());manifest.push([p.id,f.name,name]);
+   const extension=f.name.match(/\.[^.\/\\<>:"|?*\x00-\x1f]+$/)?.[0]||'';
+   const name=`附件/${p.id}/${p.id}_${String(index+1).padStart(2,'0')}${extension}`;
+   files[name]=new Uint8Array(await f.blob.arrayBuffer());
   }
  }
  const sourceWidths={projectName:64,address:40,designUnit:34,contractor:34,approvalRef:44};
- const sheets=[{name:template?importSheet:exportSheet,rows:overviewRows,widths:template?specs.map(([key,title])=>sourceWidths[key]??Math.max(24,2*title.length+4)):null,requiredHeaders:specs.filter(s=>s[3]).map(s=>s[1]),readonlyHeaders:specs.filter(s=>isReadonly(s[2])).map(s=>s[1])},
+ const sheets=[{name:template?importSheet:exportSheet,rows:overviewRows,widths:template?specs.map(([key,title])=>sourceWidths[key]??Math.max(24,2*title.length+4)):null,requiredHeaders:specs.filter(spec=>spec[3]||(template&&spec[4])).map(spec=>spec[1]),readonlyHeaders:specs.filter(s=>isReadonly(s[2])).map(s=>s[1])},
   {name:quantitySheet,rows:quantityRows,requiredHeaders:['项目编号']},{name:tailSheet,rows:tailRows,requiredHeaders:['项目编号',tailsSpec[0][1]]},
-  {name:'附件清单',rows:manifest,requiredHeaders:fileHeads},{name:'填写说明',rows:instructions,widths:[26,84],wrapRows:true}];
+  {name:'填写说明',rows:instructions,widths:[26,84],wrapRows:true}];
  if(history.length>1)sheets.push({name:'历史决算',rows:history});
  files['决算表单.xlsx']=new Uint8Array(await workbook(sheets).arrayBuffer());files['导入说明.txt']=enc.encode(instructions.map(row=>row.join('：')).join('\n'));
  if(Object.values(files).reduce((n,b)=>n+b.length,0)>limits.compressed-1024*1024)throw Error('打包文件超过 100 MB，请缩小筛选范围分批导出');
@@ -10158,7 +10153,12 @@ function objects(sheet,headers,label){
  if(!sheet?.length)throw Error('缺少工作表：'+label);
  const clean=v=>String(v??'').trim().replace(/\s*\*$/,''),cols=sheet[0].map(clean);
  if(new Set(cols).size!==cols.length)throw Error(label+'存在重复列名');for(const h of headers)if(!cols.includes(h))throw Error(label+'缺少列：'+h);
- return sheet.slice(1).map((row,i)=>({row:i+2,data:Object.fromEntries(headers.map(h=>[h,String(row[cols.indexOf(h)]??'').trim()]))})).filter(r=>Object.values(r.data).some(v=>v!==''));
+ const selected=headers.map(header=>[header,cols.indexOf(header)]);
+ return sheet.slice(1).map((row,index)=>({row:index+2,data:Object.fromEntries(selected.map(([header,column])=>{
+  const value=row[column];
+  if(value===formulaCell)throw Error(`${label}第 ${index+2} 行“${header}”含公式，请转换为值后再导入`);
+  return [header,String(value??'').trim()];
+ }))})).filter(r=>Object.values(r.data).some(v=>v!==''));
 }
 function inputValue(value,type){return type==='date'?dateCell(value):['money','area'].includes(type)?value.replace(/,/g,''):value}
 async function inspect(file){
@@ -10166,20 +10166,19 @@ async function inspect(file){
  const packed=await unzip(await file.arrayBuffer()),names=Object.keys(packed).filter(n=>!n.split('/').some(x=>x==='__MACOSX'||x.startsWith('.')));
  const books=names.filter(n=>/^决算表单(?:[-_].*)?\.xlsx$/i.test(n.split('/').pop())&&!n.split('/').includes('附件'));
  if(!books.length)throw Error('包内缺少“决算表单.xlsx”，请使用模板');
- const rows=[],targets=new Map(),attachments=[],lines=[],messages=[],referenced=new Set(),visible=new Map(eligible().map(p=>[p.id,p]));
+ const rows=[],targets=new Map(),lines=[],messages=[],visible=new Map(projectSources().map(p=>[p.id,p]));
  for(const name of books){
   let sheets;try{sheets=await readWorkbook(packed[name])}catch(e){throw Error(name+'：'+e.message)}
   const overview=sheets[importSheet]||sheets[exportSheet];
   if(!overview&&sheets['决算表单'])throw Error('请下载新版项目决算导入模板，将旧表单中的材料整理到新版压缩包');
-  for(const {row,data} of objects(overview,importSpecs.map(s=>s[1]),importSheet)){
+  for(const {row,data} of objects(overview,importHeaders,importSheet)){
    const id=data['项目编号'],p=visible.get(id),r=p?empty(p):null,errors=[];
    if(targets.has(id))errors.push('同包项目编号重复');
-   if(!canStart(p))errors.push('项目须在当前组织范围内，且阶段性验收和专项验收全部合格、合同已结算');
+   if(!id)errors.push('请填写项目编号');
+   else if(!p)errors.push('项目编号与当前组织的系统项目不一致');
+   else if(!canStart(p))errors.push('阶段性验收和专项验收须全部合格，且合同已结算');
    if(record(id)?.submittedAt)errors.push('该项目决算已完成，不允许覆盖');
-   if(p)for(const [key,label,type] of importSpecs){
-    const value=data[label];if(isOverviewSource(type)){if(value&&!sourceMatches(value,sourceValue(p,r,key),type))errors.push(label+'与项目资料不一致')}
-    else r[key]=inputValue(value,type);
-   }
+   if(r)for(const [key,label,type] of importFields)r[key]=inputValue(data[label],type);
    const item={id,p,record:r,errors,book:name,row};rows.push(item);
    if(!targets.has(id))targets.set(id,item);
   }
@@ -10187,7 +10186,6 @@ async function inspect(file){
    if(!sheets[sheet])continue;
    for(const {row,data} of objects(sheets[sheet],detailsHead(specs),sheet))lines.push({sheet,row,book:name,key,id:data['项目编号'],values:Object.fromEntries(specs.map(([key,title,type])=>[key,inputValue(data[title],type)]))});
   }
-  for(const item of objects(sheets['附件清单'],fileHeads,'附件清单'))attachments.push({...item.data,book:name,row:item.row});
  }
  if(!rows.length)throw Error('项目概况表没有项目数据');if(rows.length>500)throw Error('每次最多导入 500 个项目');
  for(const line of lines){
@@ -10196,30 +10194,37 @@ async function inspect(file){
   if(!target)messages.push(`${line.book} ${line.sheet}第 ${line.row} 行未对应包内项目 ${line.id}`);
   else if(target.record)target.record[line.key].push(line.values);
  }
- for(const a of attachments){
-  const id=a['项目编号'],target=targets.get(id),prefix=`${a.book} 附件清单第 ${a.row} 行：`;
-  if(!target){messages.push(prefix+'附件未对应包内表单项目 '+id);continue}
-  const errors=target.errors;let name;try{name=cleanPath(a['文件路径'])}catch(e){errors.push(prefix+e.message);continue}
-  const actualName=a['文件名称'];
-  if(!actualName||/[\\/\x00-\x1f]/.test(actualName)){errors.push(prefix+'文件名称无效');continue}
-  if(!packed[name]){errors.push(prefix+'找不到文件 '+name);continue}
-  if(!name.split('/').includes('附件')){errors.push(prefix+'附件须放在附件目录');continue}
-  if(referenced.has(name)){errors.push(prefix+'附件重复关联');continue}
-  referenced.add(name);
-  if(target.record)target.record.files.push({id:crypto.randomUUID(),name:actualName,size:packed[name].length,type:'application/octet-stream',blob:new Blob([packed[name]])});
+ const workbookPaths=new Set(books),attachmentNumbers=new Set();
+ for(const path of names){
+  const name=path.split('/').pop();
+  if(workbookPaths.has(path)||name==='导入说明.txt')continue;
+  const match=attachmentNamePattern.exec(name),sequence=match?.[2].replace(/^0+/,'');
+  if(!sequence){messages.push('附件名称须为“项目编号_序号”并可带扩展名：'+path);continue}
+  const id=match[1],target=targets.get(id);
+  if(!target){messages.push('附件的项目编号未匹配到本包表单：'+path);continue}
+  const numberKey=id+'|'+sequence;
+  if(attachmentNumbers.has(numberKey)){target.errors.push('同一项目的附件序号重复：'+path);continue}
+  attachmentNumbers.add(numberKey);
+  if(target.record)target.record.files.push({id:crypto.randomUUID(),name,size:packed[path].length,type:'application/octet-stream',blob:new Blob([packed[path]])});
  }
- for(const name of names)if(!books.includes(name)&&!referenced.has(name)&&name.split('/').pop()!=='导入说明.txt')messages.push('文件未在附件清单关联：'+name);
- for(const item of rows)if(item.record)item.errors.push(...overviewIssues(item.record));
+ for(const item of rows)if(item.record)item.errors.push(...overviewIssues(item.record,true));
  return {rows,messages,name:file.name,scope:JSON.stringify(org()),valid:!messages.length&&rows.every(r=>!r.errors.length)};
 }
-let batch=null,working=false;const dialog=document.createElement('dialog');dialog.id='fa-import-dialog';dialog.className='fa-dialog';dialog.innerHTML='<header><h3>导入项目决算</h3><button type="button" class="fa-btn" data-fa-import="close" aria-label="关闭导入">×</button></header><div class="fa-dialog-body"><p>将决算 Excel 表单与各项目附件一起打包为 ZIP。按项目编号关联，每项目一条；整包校验通过后一次导入。</p><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button type="button" class="fa-btn" data-fa-import="template">下载压缩包模板</button><label class="fa-btn primary" style="position:relative;overflow:hidden">选择 ZIP<input type="file" id="fa-import-file" accept=".zip" aria-label="选择决算压缩包" style="position:absolute;inset:0;opacity:0;width:100%;cursor:pointer"></label></div><p class="fa-muted">模板包含项目决算填报、完成主要工程量、尾工工程、附件清单和填写说明。每个项目须填写两类明细并提供至少一个决算附件。</p><div id="fa-import-result" aria-live="polite">请选择压缩包。</div></div><footer><button type="button" class="fa-btn" data-fa-import="close">取消</button><button type="button" class="fa-btn primary" id="fa-import-confirm" disabled>确认导入</button></footer>';document.body.append(dialog);
+let batch=null,working=false;const dialog=document.createElement('dialog');dialog.id='fa-import-dialog';dialog.className='fa-dialog';dialog.innerHTML='<header><h3>导入项目决算</h3><button type="button" class="fa-btn" data-fa-import="close" aria-label="关闭导入">×</button></header><div class="fa-dialog-body"><p>将决算 Excel 表单与各项目附件一起打包为 ZIP。按项目编号关联，每项目一条；整包校验通过后一次导入。</p><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button type="button" class="fa-btn" data-fa-import="template">下载压缩包模板</button><label class="fa-btn primary" style="position:relative;overflow:hidden">选择 ZIP<input type="file" id="fa-import-file" accept=".zip" aria-label="选择决算压缩包" style="position:absolute;inset:0;opacity:0;width:100%;cursor:pointer"></label></div><p class="fa-muted">每个项目须填写两类明细并提供至少一个决算附件。请按“项目编号_序号.扩展名”命名附件，系统自动匹配项目。</p><div id="fa-import-result" aria-live="polite">请选择压缩包。</div></div><footer><button type="button" class="fa-btn" data-fa-import="close">取消</button><button type="button" class="fa-btn primary" id="fa-import-confirm" disabled>确认导入</button></footer>';document.body.append(dialog);
 const result=()=>dialog.querySelector('#fa-import-result'),confirm=()=>dialog.querySelector('#fa-import-confirm');
 function controls(disabled){working=disabled;dialog.querySelectorAll('button,input').forEach(el=>el.disabled=disabled);confirm().disabled=disabled||!batch?.valid}
 function showResult(){const count=batch.rows.length,valid=batch.rows.filter(r=>!r.errors.length).length;result().innerHTML=`<p><strong>${E(batch.name)}</strong></p><p>共 ${count} 个项目；校验通过 ${valid} 个，未通过 ${count-valid} 个。${batch.valid?'确认后全部项目将变为已完成。':'本包尚未写入；请修正后重新选择 ZIP。'}</p>${batch.messages.length?'<p style="color:#d94a4a">'+batch.messages.map(E).join('<br>')+'</p>':''}${table(['项目编号','项目名称','附件数','校验结果'],batch.rows.map(r=>`<tr><td>${E(r.id)}</td><td>${E(r.p?.name||'—')}</td><td>${r.record?.files.length||0}</td><td style="color:${r.errors.length?'#d94a4a':'#499568'}">${r.errors.length?r.errors.map(E).join('<br>'):'通过'}</td></tr>`).join(''))}`;confirm().disabled=!batch.valid}
 async function atomicCommit(list){await new Promise((resolve,reject)=>{const tx=db.transaction('records','readwrite'),store=tx.objectStore('records');let failed='';for(const r of list){const q=store.get(r.id);q.onsuccess=()=>{if(q.result?.submittedAt){failed=r.id+' 已完成决算，整包未导入';tx.abort()}else store.put(r)}}tx.oncomplete=resolve;tx.onabort=()=>reject(Error(failed||'保存失败，整包未导入'));tx.onerror=()=>reject(tx.error||Error('保存失败'))});records=records.filter(r=>!list.some(x=>x.id===r.id)).concat(list)}
 async function downloadPackage(template){const ps=filtered().filter(p=>!template||state(p)==='未完成');const blob=await packageFor(ps,template);saveBlob(blob,`项目决算${template?'导入模板':'导出'}_${today()}.zip`)}
 function notice(text){const target=page.querySelector('.fa-notice');if(target)target.textContent=text}
-const originalRenderList=renderList;renderList=function(){originalRenderList();const bar=page.querySelector('.fa-toolbar'),actions=document.createElement('div');actions.innerHTML=btn('下载导入模板','exchange-template')+btn('导入决算','exchange-import',true)+btn('导出当前筛选','exchange-export');bar.append(actions)};
+const originalRenderList=renderList;
+renderList=function(){
+ originalRenderList();
+ const bar=page.querySelector('.fa-toolbar'),actions=document.createElement('div');
+ actions.hidden=true;
+ actions.innerHTML=btn('下载导入模板','exchange-template')+btn('导入决算','exchange-import',true)+btn('导出当前筛选','exchange-export');
+ bar.append(actions);
+};
 page.addEventListener('click',async e=>{const b=e.target.closest('[data-fa]');if(!b||working)return;const act=b.dataset.fa;if(!act.startsWith('exchange-'))return;try{if(act==='exchange-import'){batch=null;dialog.querySelector('#fa-import-file').value='';result().textContent='请选择压缩包。';controls(false);dialog.showModal()}else{b.disabled=true;notice('正在生成压缩包…');await downloadPackage(act==='exchange-template');notice('压缩包已生成。')}}catch(e){notice(e.message)}finally{b.disabled=false}});
 dialog.querySelector('#fa-import-file').addEventListener('change',async e=>{const file=e.target.files[0];batch=null;confirm().disabled=true;if(!file)return;controls(true);result().textContent='正在读取并校验压缩包…';try{batch=await inspect(file);showResult()}catch(e){result().textContent='校验失败：'+e.message+'。本次未写入任何项目。'}finally{controls(false)}});
 dialog.addEventListener('click',async e=>{const act=e.target.closest('[data-fa-import]')?.dataset.faImport;if(working)return;if(act==='close'){dialog.close();batch=null}else if(act==='template'){controls(true);try{await downloadPackage(true)}catch(e){result().textContent=e.message}finally{controls(false)}}});dialog.addEventListener('cancel',e=>{if(working)e.preventDefault();else batch=null});
